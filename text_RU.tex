@@ -161,7 +161,7 @@ Erlang является программным окружением, в кото
 Есть три основных вида исходных кодов на Erlang, которые могут вам встретиться в дикой природе: базовый Erlang, приложения OTP и релизы OTP. В этой главе мы посмотрим на каждый из них и попробуем предоставить полезные подсказки для навигации по ним.
 
 
-\section{Базовый Erlang}
+\section{Ныряем в сырой Erlang}
 \label{sec:dive-raw-erlang}
 
 %If you encounter a raw Erlang code base, you're pretty much on your own. These rarely follow any specific standard, and you have to dive in the old way to figure out whatever happens in there.
@@ -174,7 +174,7 @@ Erlang является программным окружением, в кото
 К счастью такой код вам может встретиться не так часто, и обычно это работы новичков или отличные проекты, которые были когда-то начаты новичками, а теперь требуют серьёзного переписывания. В общих словах, появление инструментов таких, как \app{rebar}\footnote{\href{https://github.com/rebar/rebar/}{https://github.com/rebar/rebar/} — инструмент для сборки приложений, кратко описанный в Главе \ref{chap:building-open-source-erlang-software}} сделало так, что многие люди начали создавать приложения OTP.
 
 
-\section{Приложения OTP}
+\section{Ныряем в OTP-приложения}
 \label{sec:dive-otp-applications}
 
 %Figuring out OTP applications is usually rather simple. They usually all share a directory structure that looks like:
@@ -296,36 +296,49 @@ rebar.config
 
 \FloatBarrier
 
-\section{OTP Releases}
+\section{Ныряем в OTP-релизы}
 \label{sec:dive-otp-releases}
 
-OTP releases are not a lot harder to understand than most OTP applications you'll encounter in the wild. A release is a set of OTP applications packaged in a production-ready manner so it boots and shuts down without needing to manually call \function{application:start/2} for any app. Of course there's a bit more to releases than that, but generally, the same discovery process used for individual OTP applications will be applicable here.
+%OTP releases are not a lot harder to understand than most OTP applications you'll encounter in the wild. A release is a set of OTP applications packaged in a production-ready manner so it boots and shuts down without needing to manually call \function{application:start/2} for any app. Of course there's a bit more to releases than that, but generally, the same discovery process used for individual OTP applications will be applicable here.
+ОТР-релизы не сильно сложнее для понимания, чем обычные ОТР-приложения, которые могут вам встретиться в дикой природе. Релиз -- это набор ОТР-приложений, упакованных для доставки на производственные (\emph{production}) сервера так, что они запускаются и завершают работу без ручного вызова \function{application:start/2} в любом нужном вам приложении. Конечно есть и другие подробности касательно релизов, но обычно применяется тот же процесс исследования, как и для обычных приложений ОТР.
 
-You'll usually have a file similar to the configuration files used by \module{systools} or \module{reltool}, which will state all applications part of the release and a few\footnote{A lot} options regarding their packaging. To understand them, I recommend \href{http://learnyousomeerlang.com/release-is-the-word}{reading existing documentation on them}. If you're lucky, the project may be using \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}, an easier tool that was officially released in early 2014.
+%You'll usually have a file similar to the configuration files used by \module{systools} or \module{reltool}, which will state all applications part of the release and a few\footnote{A lot} options regarding their packaging. To understand them, I recommend \href{http://learnyousomeerlang.com/release-is-the-word}{reading existing documentation on them}. If you're lucky, the project may be using \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}, an easier tool that was officially released in early 2014.
+Обычно у вас будет файл, похожий на файлы конфигурации, которыми пользуется  \module{systools} или \module{reltool}, который содержит перечень всех приложений, включённых в релиз и несколько\footnote{На самом деле множество.} параметров касательно способа их упаковки. Для лучшего их понимания я рекомендую обратиться к  \href{http://learnyousomeerlang.com/release-is-the-word}{чтению существующей документации и книгам}. Если вам повезло, проект мог быть собран с помощью \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}, более удобного инструмента, который был официально выпущен в начале 2014.
 
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
+\subsection*{Вопросы для закрепления материала}
 
 \begin{enumerate}
-	\item How do you know if a code base is an application? A release?
-	\item What differentiates an application from a library application?
-	\item What can be said of processes under a \term{one\_for\_all} scheme for supervision?
-	\item Why would someone use a \module{gen\_fsm} behaviour over a \module{gen\_server}?
+%	\item How do you know if a code base is an application? A release?
+	\item Как вы можете узнать, что данный код является приложением? Релизом?
+%	\item What differentiates an application from a library application?
+	\item Что отличает обычное приложение от библиотечного?
+%	\item What can be said of processes under a \term{one\_for\_all} scheme for supervision?
+	\item Что можно сказать о процессах, которые запускаются под наблюдателем по схеме \term{one\_for\_all}?
+%	\item Why would someone use a \module{gen\_fsm} behaviour over a \module{gen\_server}?
+	\item Почему кто-то может решить использовать поведение \module{gen\_fsm} вместо \module{gen\_server}?
 \end{enumerate}
 
-\subsection*{Hands-On}
+\subsection*{Тренировочные задания}
 
-Download the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}. This will be used as a test bed for exercises throughout the book. Given you are not familiar with the code base yet, let's see if you can use the tips and tricks mentioned in this chapter to get an understanding of it.
+%Download the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}. This will be used as a test bed for exercises throughout the book. Given you are not familiar with the code base yet, let's see if you can use the tips and tricks mentioned in this chapter to get an understanding of it.
+Скачайте код отсюда: \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}. Этот проект будет использоваться как основа для упражнений по всей книге. Подразумевается, что вы пока не знакомы с этим кодом, давайте посмотрим, как вы воспользуетесь знаниями, полученными в текущей главе и разберётесь что к чему.
 
 \begin{enumerate}
-	\item Is this application meant to be used as a library? A standalone system?
-	\item What does it do?
-	\item Does it have any dependencies? What are they?
-	\item The app's \filename{README} mentions being non-deterministic. Can you prove if this is true? How?
-	\item Can you express the dependency chain of applications in there? Generate a diagram of them?
-	\item Can you add more processes to the main application than those described in the \filename{README}? 
+%	\item Is this application meant to be used as a library? A standalone system?
+	\item Задумано ли это приложение как библиотека или как отдельно работающая система?
+%	\item What does it do?
+	\item Что оно делает?
+%	\item Does it have any dependencies? What are they?
+	\item Есть ли у него зависимости? Какие?
+%	\item The app's \filename{README} mentions being non-deterministic. Can you prove if this is true? How?
+	\item Файл \filename{README} упоминает что-то о недетерминированности. Можете ли вы найти доказательства, что это правда? Как?
+%	\item Can you express the dependency chain of applications in there? Generate a diagram of them?
+	\item Можно ли здесь выразить цепочку зависимостей приложений? Создать диаграмму?
+%	\item Can you add more processes to the main application than those described in the \filename{README}? 
+	\item Можно ли добавить новые процессы к главному приложению кроме тех, что были описаны в файле \filename{README}?
 \end{enumerate}
 %%%
 %%%
@@ -368,26 +381,33 @@ Download the code at \href{https://github.com/ferd/recon\_demo}{https://github.c
 %%%
 %%%
 
-\chapter{Building Open Source Erlang Software}
+\chapter{Построение проектов с открытым исходным кодом на Erlang}
 \label{chap:building-open-source-erlang-software}
 
-Most Erlang books tend to explain how to build Erlang/OTP applications, but few of them go very much in depth about how to integrate with the Erlang community doing Open Source work. Some of them even avoid the topic on purpose. This chapter dedicates itself to doing a quick tour of the state of affairs in Erlang.
+%Most Erlang books tend to explain how to build Erlang/OTP applications, but few of them go very much in depth about how to integrate with the Erlang community doing Open Source work. Some of them even avoid the topic on purpose. This chapter dedicates itself to doing a quick tour of the state of affairs in Erlang.
+Большинство книг по Erlang стараются объяснить, как построить приложения на Erlang/OTP, но совсем немногие углубляются в вопросы взаимодействия с сообществом, которое работает над приложениями с открытым исходным кодом (\emph{open source}). Некоторые даже специально избегают эту тему. Эта глава посвящена небольшой экскурсии по состоянию отношений между людьми и программами в Erlang.
 
-OTP applications are the vast majority of the open source code people will encounter. In fact, many people who would need to build an OTP release would do so as one umbrella OTP application. 
+%OTP applications are the vast majority of the open source code people will encounter. In fact, many people who would need to build an OTP release would do so as one umbrella OTP application. 
+OTP-приложения являются подавляющим большинством исходных кодов, которые вы можете встретить. На самом деле многие люди, кому нужно собрать OTP-релиз, делают это в виде ещё одного приложения-зонтика, под которым размещаются все остальные части проекта.
 
-If what you're writing is a stand-alone piece of code that could be used by someone building a product, it's likely an OTP application. If what you're building is a product that stands on its own and should be deployed by users as-is (or with a little configuration), what you should be building is an OTP release.\footnote{The details of how to build an OTP application or release is left up to the Erlang introduction book you have at hand.}
+%If what you're writing is a stand-alone piece of code that could be used by someone building a product, it's likely an OTP application. If what you're building is a product that stands on its own and should be deployed by users as-is (or with a little configuration), what you should be building is an OTP release.\footnote{The details of how to build an OTP application or release is left up to the Erlang introduction book you have at hand.}
+Если то, что вы пишете, является отдельным набором файлов и кода, которые могут пригодиться кому-то ещё при построении их продукта, то вероятнее всего это будет оформлено, как приложение OTP.
 
-The main build tools supported are \app{rebar} and \app{erlang.mk}. The former is a portable Erlang script that will be used to wrap around a lot of standard functionality and add its own, while the latter is a very fancy makefile that does a bit less, but tends to be faster when it comes to compiling. In this chapter, I'll mostly focus on using \app{rebar} to build things, given it's the ad-hoc standard, is well-established, and \app{erlang.mk} applications tend to also be supported by \app{rebar} as dependencies.
+%The main build tools supported are \app{rebar} and \app{erlang.mk}. The former is a portable Erlang script that will be used to wrap around a lot of standard functionality and add its own, while the latter is a very fancy makefile that does a bit less, but tends to be faster when it comes to compiling. In this chapter, I'll mostly focus on using \app{rebar} to build things, given it's the ad-hoc standard, is well-established, and \app{erlang.mk} applications tend to also be supported by \app{rebar} as dependencies.
+Основные инструменты для сборки, которые получают поддержку авторов и сообщества -- это \app{rebar} и \app{erlang.mk}. Первое -- это портативный самодостаточный скрипт на языке Erlang, который является интерфейсом к ряду стандартных функций и добавляет некоторые свои, тогда как второе -- хитро закрученный стандартный сборочный файл (\emph{Makefile}), который делает немного меньше, но обычно выполняет компиляцию быстрее. В этой главе я в основном сосредоточусь на сборке с помощью \app{rebar}, поскольку он принят почти всеми, как стандарт, хорошо известен, а приложения, использующие \app{erlang.mk}, обычно поддерживаются при сборке с помощью \app{rebar} в качестве зависимостей.
 
-\section{Project Structure}
+
+\section{Структура проекта}
 \label{sec:project-structure}
 
-The structures of OTP applications and of OTP releases are different. An OTP application can be expected to have one top-level supervisor (if any) and possibly a bunch of dependencies that sit below it. An OTP release will usually be composed of multiple OTP applications, which may or may not depend on each other. This will lead to two major ways to lay out applications.
+%The structures of OTP applications and of OTP releases are different. An OTP application can be expected to have one top-level supervisor (if any) and possibly a bunch of dependencies that sit below it. An OTP release will usually be composed of multiple OTP applications, which may or may not depend on each other. This will lead to two major ways to lay out applications.
+Структуры приложений и релизов OTP отличаются. Ожидается, что OTP-приложение имеет один наблюдатель верхнего уровня (или ни одного) и, возможно, ряд зависимостей, которые находятся под ним. OTP-релиз обычно состоит из ряда ОТР-приложений, которые могут зависеть (или не зависеть) друг от друга. Это является причиной существования двух очень разных структур директорий.
 
-\subsection{OTP Applications}
+\subsection{OTP-приложения}
 \label{subsec:building-otp-applications}
 
-For OTP applications, the proper structure is pretty much the same as what was explained in \ref{sec:dive-otp-applications}:
+%For OTP applications, the proper structure is pretty much the same as what was explained in \ref{sec:dive-otp-applications}:
+Для ОТР-приложений правильной структурой является точно такая же, как мы рассмотрели ранее в секции \ref{sec:dive-otp-applications}:
 
 \begin{VerbatimText}
 doc/
@@ -400,9 +420,11 @@ README.md
 rebar.config
 \end{VerbatimText}
 
-What's new in this one is the \filename{deps/} directory, which is fairly useful to have, but that will be generated automatically by \app{rebar}\footnote{A lot of people package \app{rebar} directly in their application. This was initially done to help people who had never used rebar before use libraries and projects in a boostrapped manner. Feel free to install rebar globally on your system, or keep a local copy if you require a specific version to build your system.} if necessary. That's because there is no canonical package management in Erlang. People instead adopted \app{rebar}, which fetches dependencies locally, on a per-project basis. This is fine and removes a truckload of conflicts, but means that each project you have may have to download its own set of dependencies.
+%What's new in this one is the \filename{deps/} directory, which is fairly useful to have, but that will be generated automatically by \app{rebar}\footnote{A lot of people package \app{rebar} directly in their application. This was initially done to help people who had never used rebar before use libraries and projects in a boostrapped manner. Feel free to install rebar globally on your system, or keep a local copy if you require a specific version to build your system.} if necessary. That's because there is no canonical package management in Erlang. People instead adopted \app{rebar}, which fetches dependencies locally, on a per-project basis. This is fine and removes a truckload of conflicts, but means that each project you have may have to download its own set of dependencies.
+Какие появились отличия -- это директория \filename{deps/}, которую полезно иметь и она будет создана автоматически при работе с \app{rebar}\footnote{Многие люди пакуют \app{rebar} прямо в свои приложения. Изначально это помогало другим людям, которые никогда ранее им не пользовались, начать немедленно им пользоваться. На ваш вкус можно установить rebar глобально в вашей системе, или хранить локальную копию, если вам требуется особенная его версия.} по мере необходимости. Это происходит потому, что Erlang не имеет стандартного управления пакетами зависимостей. Вместо этого люди решили использовать \app{rebar}, который скачивает зависимости локально для каждого проекта свои. Это приемлемое решение и убирает массу проблем с конфликтами, но означает, что каждому проекту придётся скачивать свой набор зависимостей.
 
-This is accomplished with \app{rebar} by adding a few config lines to \filename{rebar.config}:
+%This is accomplished with \app{rebar} by adding a few config lines to \filename{rebar.config}:
+Зависимости для \app{rebar} задаются с помощью добавления строк в специальный файл \filename{rebar.config}, которого ваш проект может не иметь -- тогда создайте его сами:
 
 \begin{VerbatimText}
 {deps,
@@ -416,11 +438,14 @@ This is accomplished with \app{rebar} by adding a few config lines to \filename{
    {hg, "https://bitbucket.org/user/theirapp.hg" {branch, "stable"}}}]}.
 \end{VerbatimText}
 
-Applications are fetched directly from a \app{git} (or \app{hg}, or \app{svn}) source, recursively. They can then be compiled, and specific compile options can be added with the \expression{\{erl\_opts, List\}.} option in the config file\footnote{More details by calling \command{rebar help compile}}. 
+%Applications are fetched directly from a \app{git} (or \app{hg}, or \app{svn}) source, recursively. They can then be compiled, and specific compile options can be added with the \expression{\{erl\_opts, List\}.} option in the config file\footnote{More details by calling \command{rebar help compile}}.
+Приложения и их зависимости скачиваются рекурсивно с помощью стандартных утилит \app{git} (или \app{hg}, или \app{svn}) с указанных серверов. Затем они готовы к сборке и вы можете добавить особые параметры компиляции с помощью строки \expression{\{erl\_opts, СписокПараметров\}.} в файле конфигурации\footnote{Можно узнать подробнее, если выполнить \command{rebar help compile}}.
 
-Within these directories, you can do your regular development of an OTP application. To compile them, call \command{rebar get-deps compile}, which will download all dependencies, and then build them and your app at once.
+%Within these directories, you can do your regular development of an OTP application. To compile them, call \command{rebar get-deps compile}, which will download all dependencies, and then build them and your app at once.
+В пределах этих директорий вы можете выполнять обычную разработку вашего ОТР-приложения. Для компиляции вызовите команду \command{rebar get-deps compile}, которая докачает недостающие зависимости и затем соберёт всё вместе с вашим приложением.
 
-When making your application public to the world, distribute it \emph{without} the dependencies. It's quite possible that other developers' applications depend on the same applications yours do, and it's no use shipping them all multiple times. The build system in place (in this case, \app{rebar}) should be able to figure out duplicated entries and fetch everything necessary only once.
+%When making your application public to the world, distribute it \emph{without} the dependencies. It's quite possible that other developers' applications depend on the same applications yours do, and it's no use shipping them all multiple times. The build system in place (in this case, \app{rebar}) should be able to figure out duplicated entries and fetch everything necessary only once.
+Когда вы публикуете ваше приложение для всех желающих, то зависимости \emph{не включаются} в архив. Вполне возможна ситуация, когда приложения другого разработчика зависят от тех же приложений, что и ваше, и нет смысла поставлять ему наши копии зависимостей. Система сборки на компьютере другого разработчика (в нашем случае, \app{rebar}) сможет разобраться, какие зависимости нужны и докачает недостающие.
 
 %% erlang.mk downloads relx for releases, and runs it iff there's a relx file there
 
