@@ -103,60 +103,82 @@ Erlang, с другой стороны, использует такой подх
 %Erlang is a programming environment where the approach taken is equivalent to the human body's immune system, whereas most other languages only care about hygiene to make sure no germ enters the body. Both forms appear extremely important to me. Almost every environment offers varying degrees of hygiene. Nearly no other environment offers the immune system where errors at run time can be dealt with and seen as survivable.
 Erlang является программным окружением, в котором выбранный подход аналогичен иммун\-ной системе человеческого тела, когда большая часть языков программирования только беспоко\-ятся о гигиене, и блокируют доступ бактерий к телу. Обе формы кажутся мне очень важными. Почти любое окружение предлагает различные степени гигиены. Но почти никакое из окружений не предлагает аналог иммунной системы, в которой ошибки времени выполнения решаются на месте и расцениваются как некритичные, после которых система продолжает работу.
 
-Because the system doesn't collapse the first time something bad touches it, Erlang/OTP also allows you to be a doctor. You can go in the system, pry it open right there in production, carefully observe everything inside as it runs, and even try to fix it interactively. To continue with the analogy, Erlang allows you to perform extensive tests to diagnose the problem and various degrees of surgery (even very invasive surgery), without the patients needing to sit down or interrupt their daily activities.
+%Because the system doesn't collapse the first time something bad touches it, Erlang/OTP also allows you to be a doctor. You can go in the system, pry it open right there in production, carefully observe everything inside as it runs, and even try to fix it interactively. To continue with the analogy, Erlang allows you to perform extensive tests to diagnose the problem and various degrees of surgery (even very invasive surgery), without the patients needing to sit down or interrupt their daily activities.
+Поскольку система не обрушивается при первом прикосновении чего-нибудь плохого, Erlang/OTP также позволяет вам стать доктором. Вы можете зайти в систему, открыть крышку прямо на производственном сервере, осторожно изучить всё внутри, не прерывая работы, и даже попытаться интерактивно починить его. Чтобы продолжить эту цепочку аналогий, Erlang позволояет вам выполнять широкий спектр тестов для диагностики проблем и разные уровни хирургии (даже очень глубокую хирургию), без необходимости для пациента ложиться на стол, садиться или прерывать его каждодневные обычные дела.
 
-This book intends to be a little guide about how to be the Erlang medic in a time of war. It is first and foremost a collection of tips and tricks to help understand where failures come from, and a dictionary of different code snippets and practices that helped developers debug production systems that were built in Erlang.
+%This book intends to be a little guide about how to be the Erlang medic in a time of war. It is first and foremost a collection of tips and tricks to help understand where failures come from, and a dictionary of different code snippets and practices that helped developers debug production systems that were built in Erlang.
+Эта книга задумана стать небольшой инструкцией на тему того, как стать Erlang-доктором во время войны. Это в первую очередь и в основном -- коллекция подсказок и секретов, которые помогут понять, откуда приходят сбои, и набор фрагментов кода и методик, которые уже помогли другим разработчикам при отладке их рабочих систем, построенных на Erlang.
 
-\section*{Who is this for?}
+
+
+\section*{Для кого эта книга?}
 %\addcontentsline{toc}{section}{Who is this for?}
 \label{sec:who-is-this-for}
 
-This book is not for beginners. There is a gap left between most tutorials, books, training sessions, and actually being able to operate, diagnose, and debug running systems once they've made it to production. There's a fumbling phase implicit to a programmer's learning of a new language and environment where they just have to figure how to get out of the guidelines and step into the real world, with the community that goes with it.
+%This book is not for beginners. There is a gap left between most tutorials, books, training sessions, and actually being able to operate, diagnose, and debug running systems once they've made it to production. There's a fumbling phase implicit to a programmer's learning of a new language and environment where they just have to figure how to get out of the guidelines and step into the real world, with the community that goes with it.
+Эта книга не предназначена для начинающих. Существует некоторое расстояние между многими существующими уроками, книгами, учебными занятиями и умением управлять, диагностировать и отлаживать работающие системы после того, как они попали в производство (\emph{production}). Есть некий этап неуверенного нащупывания решений, присущий изучению программистом нового языка и окружения, когда им приходится просто разобраться, как выбираться из пошаговых инструкций и идти в реальный мир с сообществом других людей, которое к этому миру прилагается.
 
-This book assumes that the reader is proficient in basic Erlang and the OTP framework. Erlang/OTP features are explained as I see fit — usually when I consider them tricky — and it is expected that a reader who feels confused by usual Erlang/OTP material will have an idea of where to look for explanations if necessary\footnote{I do recommend visiting \href{http://learnyousomeerlang.com}{Learn You Some Erlang} or the regular \href{http://www.erlang.org/erldoc}{Erlang Documentation} if a free resource is required}.
+%This book assumes that the reader is proficient in basic Erlang and the OTP framework. Erlang/OTP features are explained as I see fit — usually when I consider them tricky — and it is expected that a reader who feels confused by usual Erlang/OTP material will have an idea of where to look for explanations if necessary\footnote{I do recommend visiting \href{http://learnyousomeerlang.com}{Learn You Some Erlang} or the regular \href{http://www.erlang.org/erldoc}{Erlang Documentation} if a free resource is required}.
+Эта книга предполагает, что читатель хорошо освоил базовый Erlang и систему OTP. Возможности Erlang/OTP описываются здесь по желанию автора -- обычно когда автор считает, что в данной ситуации кроется некая хитрость -- и ожидается, что читатель, которого вдруг собьёт с толку некоторый материал об Erlang/OTP, знает где искать пояснения при необходимости\footnote{Я рекомендую посетить сайт \href{http://learnyousomeerlang.com}{Изучай Erlang во имя добра} (имеется в продаже \href{http://dmkpress.com/catalog/computer/programming/functional/978-5-97060-086-3/}{русский перевод книги} на сайте издательства ДМК Пресс), а также \href{http://www.erlang.org/erldoc}{Стандартную документацию Erlang}.}.
 
-What is not necessarily assumed is that the reader knows how to debug Erlang software, dive into an existing code base, diagnose issues, or has an idea of the best practices about deploying Erlang in a production environment\footnote{Running Erlang in a screen or tmux session is \emph{not} a deployment strategy.}.
+%What is not necessarily assumed is that the reader knows how to debug Erlang software, dive into an existing code base, diagnose issues, or has an idea of the best practices about deploying Erlang in a production environment\footnote{Running Erlang in a screen or tmux session is \emph{not} a deployment strategy.}.
+Вот что не требуется явно, так это то, что читатель должен знать об отладке программ на Erlang, уметь копаться в существующем исходном коде, диагностировать проблемы или иметь представление о лучших практиках установки Erlang-программ в производственном окружении\footnote{Заметьте, что запуск Erlang в экране screen или tmux \emph{не} является стратегией установки программы.}.
 
-\section*{How To Read This Book}
+
+\section*{Как читать эту книгу}
 %\addcontentsline{toc}{section}{How To Read This Book}
 \label{sec:how-to-read-this-book}
 
-This book is divided in two parts. 
+%This book is divided in two parts. 
+Книга разделена на две части.
 
-Part \ref{part:writing-applications} focuses on how to write applications. It includes how to dive into a code base (Chapter \ref{chap:how-to-dive-into-a-code-base}), general tips on writing open source Erlang software (Chapter \ref{chap:building-open-source-erlang-software}), and how to plan for overload in your system design (Chapter \ref{chap:overload}).
+%Part \ref{part:writing-applications} focuses on how to write applications. It includes how to dive into a code base (Chapter \ref{chap:how-to-dive-into-a-code-base}), general tips on writing open source Erlang software (Chapter \ref{chap:building-open-source-erlang-software}), and how to plan for overload in your system design (Chapter \ref{chap:overload}).
+Часть \ref{part:writing-applications} сосредоточена на методике написания приложений. Она включает рекомендации по работе с существующим исходным кодом (Глава \ref{chap:how-to-dive-into-a-code-base}), общие советы по написанию программ с открытым исходным кодом (\emph{open source}) на языке Erlang (Глава \ref{chap:building-open-source-erlang-software}), и как учитывать чрезвычайную нагрузку в будущем при проектировании вашей системы (Глава \ref{chap:overload}).
 
-Part \ref{part:diagnosing-applictions} focuses on being an Erlang medic and concerns existing, living systems. It contains instructions on how to connect to a running node (Chapter \ref{chap:connecting}), and the basic runtime metrics available (Chapter \ref{chap:runtime-metrics}). It also explains how to perform a system autopsy using a crash dump (Chapter \ref{chap:crash-dumps}), how to identify and fix memory leaks (Chapter \ref{chap:memory-leaks}), and how to find runaway CPU usage (Chapter \ref{chap:cpu-hogs}). The final chapter contains instructions on how to trace Erlang function calls in production using \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/} — a library used to make the text lighter, and with generally production-safe functions.} to understand issues before they bring the system down (Chapter \ref{chap:tracing}).
 
-Each chapter is followed up by a few optional exercises in the form of questions or hands-on things to try if you feel like making sure you understood everything, or if you want to push things further.
+%Part \ref{part:diagnosing-applictions} focuses on being an Erlang medic and concerns existing, living systems. It contains instructions on how to connect to a running node (Chapter \ref{chap:connecting}), and the basic runtime metrics available (Chapter \ref{chap:runtime-metrics}). It also explains how to perform a system autopsy using a crash dump (Chapter \ref{chap:crash-dumps}), how to identify and fix memory leaks (Chapter \ref{chap:memory-leaks}), and how to find runaway CPU usage (Chapter \ref{chap:cpu-hogs}). The final chapter contains instructions on how to trace Erlang function calls in production using \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/} — a library used to make the text lighter, and with generally production-safe functions.} to understand issues before they bring the system down (Chapter \ref{chap:tracing}).
+Часть \ref{part:diagnosing-applictions} сосредоточена на вашей роли в качестве Erlang-доктора и касается существующих, живых систем. Она содержит инструкции о том, как подключиться к работающему узлу (Глава \ref{chap:connecting}), и перечень доступных во время выполнения метрик (Глава \ref{chap:runtime-metrics}). Здесь также объясняется как выполнить посмертное вскрытие погибшей системы с помощью аварийного дампа (\emph{crash dump}) (Глава \ref{chap:crash-dumps}), как определить и исправить утечки памяти (Глава \ref{chap:memory-leaks}), и как найти украденное процессорное время (Глава \ref{chap:cpu-hogs}). Последняя глава содержит инструкции о том, как трассировать вызовы функций Erlang на живой производственной системе с помощью приложения \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/} — библиотека, содержащая функции в целом безопасные для использования на работающих системах и помогающая сделать текст книги короче и понятнее.} чтобы понять причины проблем до того, как они приведут к падению системы (Глава \ref{chap:tracing}).
+
+%Each chapter is followed up by a few optional exercises in the form of questions or hands-on things to try if you feel like making sure you understood everything, or if you want to push things further.
+После каждой главы имеются несколько необязательных упражнений в виде вопросов или задач, которые можно попробовать решить для того, чтобы проверить ваше понимание материала, или если вы хотите узнать чуточку больше по каждой данной теме.
 %%%
 %%%
 %%%
 
-\part{Writing Applications}
+\part{Написание приложений}
 \label{part:writing-applications}
 
-\chapter{How to Dive into a Code Base}
+\chapter{Как нырять в чужой исходный код}
 \label{chap:how-to-dive-into-a-code-base}
 
-"Read the source" is one of the most annoying things to be told, but dealing with Erlang programmers, you'll have to do it often. Either the documentation for a library will be incomplete, outdated, or just not there. In other cases, Erlang programmers are a bit similar to Lispers in that they will tend to write libraries that will solve their problems and not really test or try them in other circumstances, leaving it to you to extend or fix issues that arise in new contexts.
+%"Read the source" is one of the most annoying things to be told, but dealing with Erlang programmers, you'll have to do it often. Either the documentation for a library will be incomplete, outdated, or just not there. In other cases, Erlang programmers are a bit similar to Lispers in that they will tend to write libraries that will solve their problems and not really test or try them in other circumstances, leaving it to you to extend or fix issues that arise in new contexts.
+Один из самых раздражающих комментариев, которые можно услышать в ответ на любой вопрос -- это <<Читай исходники>>, но в случае с Erlang-программистами вам придётся делать это довольно часто. Либо окажется, что документация к библиотеке неполна, устарела или отсутствует. В других случаях Erlang-программисты чем-то подобны программистам на языке Lisp, в том, что они часто пишут библиотеки, решающие их собственную проблему, и не тестируют их в других ситуациях, оставляя вам свободу расширения или удовольствие исправления проблем, которые вылезают при использовании кода в новом контексте.
 
-It's thus pretty much guaranteed you'll have to go dive in some code base you know nothing about, either because you inherited it at work, or because you need to fix it or understand it to be able to move forward with your own system. This is in fact true of most languages whenever the project you work on is not one you designed yourself.
+%It's thus pretty much guaranteed you'll have to go dive in some code base you know nothing about, either because you inherited it at work, or because you need to fix it or understand it to be able to move forward with your own system. This is in fact true of most languages whenever the project you work on is not one you designed yourself.
+Таким образом практически гарантированно вам придётся нырять в чьи-то исходные коды, о которых вам ничего не известно, потому что вы унаследовали их на новом месте работы или поскольку вам нужно починить что-то в коде или понять принципы его работы, чтобы продолжить работу над вашей собственной системой. Это утверждение на самом деле истинно для многих языков, когда ваш проект не спроектирован вами самими.
 
-There are three main types of Erlang code bases you'll encounter in the wild: raw Erlang code bases, OTP applications, and OTP releases. In this chapter, we'll look at each of these and try to provide helpful tips on navigating them.
+%There are three main types of Erlang code bases you'll encounter in the wild: raw Erlang code bases, OTP applications, and OTP releases. In this chapter, we'll look at each of these and try to provide helpful tips on navigating them.
+Есть три основных вида исходных кодов на Erlang, которые могут вам встретиться в дикой природе: базовый Erlang, приложения OTP и релизы OTP. В этой главе мы посмотрим на каждый из них и попробуем предоставить полезные подсказки для навигации по ним.
 
-\section{Raw Erlang}
+
+\section{Базовый Erlang}
 \label{sec:dive-raw-erlang}
 
-If you encounter a raw Erlang code base, you're pretty much on your own. These rarely follow any specific standard, and you have to dive in the old way to figure out whatever happens in there.
+%If you encounter a raw Erlang code base, you're pretty much on your own. These rarely follow any specific standard, and you have to dive in the old way to figure out whatever happens in there.
+Если вам встретился исходный код чего-нибудь на базовом (сыром) Erlang, вам остаётся надеяться только на самих себя. Такой код редко следует принятым стандартам и вам придётся нырять в него по-старинке, чтобы попытаться понять, что в коде происходит.
 
-This means hoping for a \filename{README.md} file or something similar that can point to an entry point in the application, and going from there, or hoping for some contact information that can be used to ask questions to the author(s) of the library.
+%This means hoping for a \filename{README.md} file or something similar that can point to an entry point in the application, and going from there, or hoping for some contact information that can be used to ask questions to the author(s) of the library.
+Это означает надеяться на наличие файла \filename{README.md} или что-то подобное, где можно найти точку входа в приложение, и начать оттуда. Или, может, удастся найти контактные данные и связаться с автором, чтобы задать ему вопросы по его коду.
 
-Fortunately, you should rarely encounter raw Erlang in the wild, and they are often beginner projects, or awesome projects that were once built by Erlang beginners and now need a serious rewrite. In general, the advent of tools such as \app{rebar}\footnote{\href{https://github.com/rebar/rebar/}{https://github.com/rebar/rebar/} — a build tool briefly introduced in Chapter \ref{chap:building-open-source-erlang-software}} made it so most people use OTP Applications.
+%Fortunately, you should rarely encounter raw Erlang in the wild, and they are often beginner projects, or awesome projects that were once built by Erlang beginners and now need a serious rewrite. In general, the advent of tools such as \app{rebar}\footnote{\href{https://github.com/rebar/rebar/}{https://github.com/rebar/rebar/} — a build tool briefly introduced in Chapter \ref{chap:building-open-source-erlang-software}} made it so most people use OTP Applications.
+К счастью такой код вам может встретиться не так часто, и обычно это работы новичков или отличные проекты, которые были когда-то начаты новичками, а теперь требуют серьёзного переписывания. В общих словах, появление инструментов таких, как \app{rebar}\footnote{\href{https://github.com/rebar/rebar/}{https://github.com/rebar/rebar/} — инструмент для сборки приложений, кратко описанный в Главе \ref{chap:building-open-source-erlang-software}} сделало так, что многие люди начали создавать приложения OTP.
 
-\section{OTP Applications}
+
+\section{Приложения OTP}
 \label{sec:dive-otp-applications}
 
-Figuring out OTP applications is usually rather simple. They usually all share a directory structure that looks like:
+%Figuring out OTP applications is usually rather simple. They usually all share a directory structure that looks like:
+Разбираться с OTP-приложениями обычно несложно. Часто они имеют одинаковую структуру директорий, которая выглядит так:
 
 \begin{VerbatimRaw}
 doc/
@@ -168,81 +190,109 @@ README.md
 rebar.config
 \end{VerbatimRaw}
 
-There might be slight differences, but the general structure will be the same.
+%There might be slight differences, but the general structure will be the same.
+Могут быть небольшие отличия, но основная структура будет одинакова для всех.
 
-Each OTP application should contain an \emph{app file}, either \filename{ebin/<AppName>.app} or more often, \filename{src/<AppName>.app.src}\footnote{A build system generates the final file that goes in \filename{ebin}. Note that in these cases, many  \filename{src/<AppName>.app.src} files do not specify modules and let the build system take care of it.}. There are two main varieties of app files:
+%Each OTP application should contain an \emph{app file}, either \filename{ebin/<AppName>.app} or more often, \filename{src/<AppName>.app.src}\footnote{A build system generates the final file that goes in \filename{ebin}. Note that in these cases, many  \filename{src/<AppName>.app.src} files do not specify modules and let the build system take care of it.}. There are two main varieties of app files:
+Каждое приложение OTP должно обязательно содержать \emph{app-файл}, который находится в \filename{ebin/<ИмяПриложения>.app} либо чаще, \filename{src/<ИмяПриложения>.app.src}\footnote{Система сборки генерирует окончательный файл, который затем помещается в папку \filename{ebin}. Заметьте что в этих случаях многие файлы  \filename{src/<ИмяПриложения>.app.src} не перечисляют все модули проекта, а позволяют системе сборки позаботиться об этом.}. Существует два основных вида app-файлов:
 
 \includecode[erlang]{useragent.app.src}
 
-And:
+И такой:
 
 \includecode[erlang]{dispcount.app}
 
-This first case is called a \emph{library application}, while the second case is a regular \emph{application}.
+%This first case is called a \emph{library application}, while the second case is a regular \emph{application}.
+Первый вариант называется \emph{библиотечным приложением}, а второй -- обычным \emph{приложением}.
 
-\subsection{Library Applications}
+
+\subsection{Библиотечные приложения}
 \label{subsec:dive-library-applications}
 
-Library applications will usually have modules named \module{\emph{appname}\_something}, and one module named \module{\emph{appname}}. This will usually be the interface module that's central to the library and contains a quick way into most of the functionality provided.
+%Library applications will usually have modules named \module{\emph{appname}\_something}, and one module named \module{\emph{appname}}. This will usually be the interface module that's central to the library and contains a quick way into most of the functionality provided.
+Библиотечные приложения обычно содержат модули, названные однообразно в стиле \module{\emph{имяприложения}\_чтото}, и один модуль с именем \module{\emph{имяприложения}}. Обычно это интерфейсный модуль, являющийся центральным для всей библиотеки и предоставляет быстрый доступ к имеющимся функциям библиотеки.
 
-By looking at the source of the module, you can figure out how it works with little effort: If the module adheres to any given behaviour (\module{gen\_server}, \module{gen\_fsm}, etc.), you're most likely expected to start a process under one of your own supervisors and call it that way. If no behaviour is included, then you probably have a functional, stateless library on your hands. For this case, the module's exported functions should give you a quick way to understand its purpose.
+%By looking at the source of the module, you can figure out how it works with little effort: If the module adheres to any given behaviour (\module{gen\_server}, \module{gen\_fsm}, etc.), you're most likely expected to start a process under one of your own supervisors and call it that way. If no behaviour is included, then you probably have a functional, stateless library on your hands. For this case, the module's exported functions should give you a quick way to understand its purpose.
+Глядя на исходный текст модуля можно понять, как он работает, без особых усилий: если модуль соответствует некоторому данному поведению (например, \module{gen\_server}, \module{gen\_fsm}, и так далее), от вас ожидается запуск процесса под одним из ваших наблюдателей и вызов его стандартным способом. Если поведение не указано, то, вероятнее всего, это функциональная библиотека без состояния. Для таких случаев взгляд на экспортированные функции должен дать вам возможность понять его назначение.
 
-\subsection{Regular Applications}
+
+\subsection{Обычные приложения}
 \label{subsec:dive-regular-applications}
 
-For a regular OTP application, there are two potential modules that act as the entry point:
+%For a regular OTP application, there are two potential modules that act as the entry point:
+Для обычного приложения OTP потенциально имеются два модуля, которые могут действовать в качестве точки входа: 
 
 \begin{enumerate*}
-	\item \module{\emph{appname}}
-	\item \module{\emph{appname}\_app}
+	\item \module{\emph{имяприложения}}
+	\item \module{\emph{имяприложения}\_app}
 \end{enumerate*}
 
-The first file should be similar in use to what we had in a library application (an entry point), while the second one will implement the \module{application} behaviour, and will represent the top of the application's process hierarchy. In some cases the first file will play both roles at once.
+%The first file should be similar in use to what we had in a library application (an entry point), while the second one will implement the \module{application} behaviour, and will represent the top of the application's process hierarchy. In some cases the first file will play both roles at once.
+Первый файл должен вести себя подобно тому, как он вёл себя в библиотечном приложении (точка входа), тогда как второй будет реализовать поведение \module{application}, и представлять собой верхушку иерархии процессов приложения. В некоторых случаях первый файл будет играть обе роли одновременно.
 
-If you plan on simply adding the application as a dependency to your own app, then look inside \module{\emph{appname}} for details and information. If you need to maintain and/or fix the application, go for \module{\emph{appname}\_app} instead.
+%If you plan on simply adding the application as a dependency to your own app, then look inside \module{\emph{appname}} for details and information. If you need to maintain and/or fix the application, go for \module{\emph{appname}\_app} instead.
+Если вы планируете просто добавить приложение в качестве зависимости для вашей программы, то смотрите внутрь модуля \module{\emph{имяприложения}} для получения подробностей. Если же вам нужно обслуживать и/или исправить что-то в приложении, то вместо этого смотрите модуль \module{\emph{имяприложения}\_app}.
 
-The application will start a top-level supervisor and return its \emph{pid}. This top-level supervisor will then contain the specifications of all the child processes it will start on its own\footnote{In some cases, the supervisor specifies no children: they will either be started dynamically by some function of the API or in a start phase of the application, or the supervisor is only there to allow OTP environment variables (in the \expression{env} tuple of the app file) to be loaded.}.
+%The application will start a top-level supervisor and return its \emph{pid}. This top-level supervisor will then contain the specifications of all the child processes it will start on its own\footnote{In some cases, the supervisor specifies no children: they will either be started dynamically by some function of the API or in a start phase of the application, or the supervisor is only there to allow OTP environment variables (in the \expression{env} tuple of the app file) to be loaded.}.
+Приложение запустит наблюдателя верхнего уровня и возвратит его \emph{идентификатор процесса}. Этот наблюдатель затем будет содержать спецификации всех дочерних процессов, которые он запустит уже самостоятельно\footnote{В некоторых случаях наблюдатель не описывает никаких дочерних процессов: тогда они либо будут запущены динамически с помощью какой-нибудь функции в API, либо на этапе запуска приложения, либо наблюдатель присутствует здесь только для того, чтобы позволить загрузить переменные окружения OTP (из кортежа \expression{env} в app-файле).}.
 
-The higher a process resides in the tree, the more likely it is to be vital to the survival of the application. You can also estimate how important a process is by the order it is started (all children in the supervision tree are started in order, depth-first). If a process is started later in the supervision tree, it probably depends on processes that were started earlier.
+%The higher a process resides in the tree, the more likely it is to be vital to the survival of the application. You can also estimate how important a process is by the order it is started (all children in the supervision tree are started in order, depth-first). If a process is started later in the supervision tree, it probably depends on processes that were started earlier.
+Чем выше процесс находится в дереве наблюдения, тем более вероятно он окажется жизненно важным для работы приложения. Вы также можете оценить важность процесса по порядку их запуска (все подчинённые процессы в дереве наблюдения запускаются по порядку, начиная с самых глубоко вложенных). Если процесс запущен позднее в дереве наблюдения, то вероятно он зависит от ранее запущенных процессов.
 
-Moreover, worker processes that depend on each other within the same application (say, a process that buffers socket communications and relays them to a finite-state machine in charge of understanding the protocol) are likely to be regrouped under the same supervisor and to fail together when something goes wrong. This is a deliberate choice, as it is usually simpler to start from a blank slate, restarting both processes, rather than trying to figure out how to recuperate when one or the other loses or corrupts its state.
+%Moreover, worker processes that depend on each other within the same application (say, a process that buffers socket communications and relays them to a finite-state machine in charge of understanding the protocol) are likely to be regrouped under the same supervisor and to fail together when something goes wrong. This is a deliberate choice, as it is usually simpler to start from a blank slate, restarting both processes, rather than trying to figure out how to recuperate when one or the other loses or corrupts its state.
+Более того, рабочие процессы, которые зависят друг от друга внутри одного приложения (скажем, процесс, который собирает в буфер данные, прилетающие из сокета, и передаёт их в конечный автомат, который отвечает за разбор протокола) вероятно будут сгруппированы внутри одного наблюдателя и должны падать все вместе, если что-то идёт не так. Это добровольный выбор программиста, поскольку обычно проще начинать работу с чистым состоянием, перезапуская оба процесса вместо того, чтобы пытаться выяснить, как заживить раны, нанесённые утратой или повреждением состояния другим процессом из связки.
 
-The supervisor restart strategy reflects the relationship between processes under a supervisor:
-
-\begin{itemize*}
-	\item \expression{one\_for\_one} and \expression{simple\_one\_for\_one} are used for processes that are not dependent upon each other directly, although their failures will collectively be counted towards total application shutdown\footnote{Some developers will use \expression{one\_for\_one} supervisors when \expression{rest\_for\_one} is more appropriate. They require strict ordering to boot correctly, but forget about said order when restarting or if a predecessor dies.}.
-	\item \expression{rest\_for\_one} will be used to represent processes that depend on each other in a linear manner.
-	\item \expression{one\_for\_all} is used for processes that entirely depend on each other.
-\end{itemize*}
-
-This structure means it is easiest to navigate OTP applications in a top-down manner by exploring supervision subtrees. 
-
-For each worker process supervised, the behaviour it implements will give a good clue about its purpose:
+%The supervisor restart strategy reflects the relationship between processes under a supervisor:
+Стратегия перезапуска процессов наблюдателем отражает отношение между процессами, которые находятся под наблюдением:
 
 \begin{itemize*}
-	\item a \module{gen\_server} holds resources and tends to follow client/server patterns (or more generally, request/response patterns)
-	\item a \module{gen\_fsm} will deal with a sequence of events or inputs and react depending on them, as a Finite State Machine. It will often be used to implement protocols.
-	\item a \module{gen\_event} will act as an event hub for callbacks, or as a way to deal with notifications of some sort.
+%	\item \expression{one\_for\_one} and \expression{simple\_one\_for\_one} are used for processes that are not dependent upon each other directly, although their failures will collectively be counted towards total application shutdown\footnote{Some developers will use \expression{one\_for\_one} supervisors when \expression{rest\_for\_one} is more appropriate. They require strict ordering to boot correctly, but forget about said order when restarting or if a predecessor dies.}.
+	\item \expression{one\_for\_one} и \expression{simple\_one\_for\_one} используются для тех процессов, которые не зависят прямо друг от друга, хотя их отказы посчитаются в пользу полной остановки приложения\footnote{Некоторые разработчики будут использовать наблюдатели \expression{one\_for\_one} когда на самом деле лучше бы подошла стратегия \expression{rest\_for\_one}. Такие процессы требуют строгого порядка при запуске, но забывают об этом порядке, когда дело доходит до перезапуска, или если предыдущий процесс в связке умирает.}.
+%	\item \expression{rest\_for\_one} will be used to represent processes that depend on each other in a linear manner.
+	\item \expression{rest\_for\_one} будет использован для процессов, которые зависят линейно друг от друга.
+%	\item \expression{one\_for\_all} is used for processes that entirely depend on each other.
+	\item \expression{one\_for\_all} используется когда в связке процессов все зависят от всех.
 \end{itemize*}
 
-All of these modules will contain the same kind of structure: exported functions that represent the user-facing interface, exported functions for the callback module, and private functions, usually in that order.
+%This structure means it is easiest to navigate OTP applications in a top-down manner by exploring supervision subtrees. 
+Эта структура означает, что легче всего изучать OTP-приложения сверху вниз, следуя по ветвям деревьев наблюдения.
 
-Based on their supervision relationship and the typical role of each behaviour, looking at the interface to be used by other modules and the behaviours implemented should reveal a lot of information about the program you're diving into.
+%For each worker process supervised, the behaviour it implements will give a good clue about its purpose:
+Для каждого рабочего процесса под наблюдением поведение, которое он реализует, даст хорошую подсказку о его назначении:
 
-\subsection{Dependencies}
+\begin{itemize*}
+%	\item a \module{gen\_server} holds resources and tends to follow client/server patterns (or more generally, request/response patterns)
+	\item \module{gen\_server} хранит некоторые ресурсы и обычно следует модели поведения клиент/сервер (или, обобщённо, шаблон поведения запрос/ответ)
+%	\item a \module{gen\_fsm} will deal with a sequence of events or inputs and react depending on them, as a Finite State Machine. It will often be used to implement protocols.
+	\item \module{gen\_fsm} будет обрабатывать последовательность событий или входных данных и реагировать на них следуя модели поведения конечного автомата. Часто конечные автоматы используются для реализации протоколов.
+%	\item a \module{gen\_event} will act as an event hub for callbacks, or as a way to deal with notifications of some sort.
+	\item \module{gen\_event} будет вести себя как обработчик событий и центр регистрации обратных вызовов, или как способ справиться с уведомлениями какого-нибудь вида.
+\end{itemize*}
+
+%All of these modules will contain the same kind of structure: exported functions that represent the user-facing interface, exported functions for the callback module, and private functions, usually in that order.
+Все эти модули будут иметь некоторую схожую структуру: экспортированные функции, которые представляют интерфейс пользователя, ещё экспортированные функции, которые реализуют некоторый модуль обратных вызовов (поведение), приватные функции, обычно в таком порядке.
+
+%Based on their supervision relationship and the typical role of each behaviour, looking at the interface to be used by other modules and the behaviours implemented should reveal a lot of information about the program you're diving into.
+На основании их отношений в дереве наблюдателя и типичной роли каждого из поведений, глядя на интерфейс, который будет использован другими модулями и реализованные поведения, можно раскрыть много информации о той программе, в которую вы ныряете.
+
+
+\subsection{Зависимости}
 \label{subsec:dive-dependencies}
 
-All applications have dependencies\footnote{At the very least on the \module{kernel} and \module{stdlib} applications}, and these dependencies will have their own dependencies. OTP applications usually share no state between them, so it's possible to know what bits of code depend on what other bits of code by looking at the app file only, assuming the developer wrote them in a mostly correct manner. Figure~\ref{fig:app-deps} shows a diagram that can be generated from looking at app files to help understand the structure of OTP applications.
+%All applications have dependencies\footnote{At the very least on the \module{kernel} and \module{stdlib} applications}, and these dependencies will have their own dependencies. OTP applications usually share no state between them, so it's possible to know what bits of code depend on what other bits of code by looking at the app file only, assuming the developer wrote them in a mostly correct manner. Figure~\ref{fig:app-deps} shows a diagram that can be generated from looking at app files to help understand the structure of OTP applications.
+Все приложения имеют зависимости\footnote{Как минимум -- это зависимость от приложений \module{kernel} и \module{stdlib}.}, и эти зависимости могут в свою очередь тоже иметь зависимости. Приложения OTP обычно не разделяют состояния между собой, так что нельзя узнать, какой код зависит от какого просто глядя на app-файл, и предполагая, что они написаны автором в самой корректной манере. Рисунок~\ref{fig:app-deps} показывает диаграмму, которая может быть построена глядя на app-файлы, чтобы помочь лучше понять структуру OTP-приложений.
 
 
 \begin{figure}
   \includegraphics{app-deps-riak-cs.pdf}%
-  \caption{Dependency graph of riak\_cs, Basho's open source cloud library.
-  The graph ignores dependencies on common applications like kernel and stdlib. Ovals are applications, rectangles are library applications.}%
+%  \caption{Dependency graph of riak\_cs, Basho's open source cloud library. The graph ignores dependencies on common applications like kernel and stdlib. Ovals are applications, rectangles are library applications.}%
+  \caption{Граф зависимостей riak\_cs, облачной библиотеки с открытым исходным кодом, написанной компанией Basho. Граф игнорирует зависимости от общих приложений, таких как kernel и stdlib. Овалами показаны приложения, прямоугольниками -- библиотечные приложения.}%
    \label{fig:app-deps}
 \end{figure}
 
-Using such a hierarchy and looking at each application's short description might be helpful to draw a rough, general map of where everything is located. To generate a similar diagram, find \app{recon}'s script directory and call \command{escript script/app\_deps.erl}\footnote{This script depends on graphviz}. Similar hierarchies can be found using the \module{observer}\footnote{\href{http://www.erlang.org/doc/apps/observer/observer\_ug.html}{http://www.erlang.org/doc/apps/observer/observer\_ug.html}} application, but for individual supervision trees. Put together, you may get an easy way to find out what does what in the code base.
+%Using such a hierarchy and looking at each application's short description might be helpful to draw a rough, general map of where everything is located. To generate a similar diagram, find \app{recon}'s script directory and call \command{escript script/app\_deps.erl}\footnote{This script depends on graphviz}. Similar hierarchies can be found using the \module{observer}\footnote{\href{http://www.erlang.org/doc/apps/observer/observer\_ug.html}{http://www.erlang.org/doc/apps/observer/observer\_ug.html}} application, but for individual supervision trees. Put together, you may get an easy way to find out what does what in the code base.
+Используя такую иерархию и глядя на короткое описание каждого из приложений, может оказаться полезным нарисовать приблизительную грубую карту где что находится. Для создания подобной диаграммы найдите в приложении \app{recon} директорию сценариев \filename{script/} и вызовите \command{escript script/app\_deps.erl}\footnote{Этот скрипт требует наличия у вас в системе программы graphviz}. Подобные иерархии можно найти используя \module{observer}\footnote{\href{http://www.erlang.org/doc/apps/observer/observer\_ug.html}{http://www.erlang.org/doc/apps/observer/observer\_ug.html}}, но для отдельных деревьев наблюдения. Если сложить это вместе, у вас может получиться удобный способ быстро нарисовать и разобраться, что происходит в незнакомом коде.
+
 
 \FloatBarrier
 
