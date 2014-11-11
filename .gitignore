@@ -1,0 +1,15 @@
+Makefile
+README
+TODO
+patch.awk
+erlang/*
+graphics/*
+shell/*
+text/*
+text.*
+*.aux
+*.lof
+*.log
+*.pdf
+*.toc
+*.synctex.gz
