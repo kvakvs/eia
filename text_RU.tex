@@ -3,6 +3,8 @@
 \usepackage{text_RU}
 \newcommand{\LongTitle}{Всё пошло не так: Erlang в гневе}
 \newcommand{\ShortTitle}{Erlang в гневе}
+\newcommand{\HandsOnTitle}{Тренировочные задания}
+\newcommand{\ReviewTitle}{Вопросы для закрепления материала}
 
 %%% Cover
 
@@ -308,7 +310,7 @@ rebar.config
 
 \section{Упражнения}
 
-\subsection*{Вопросы для закрепления материала}
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
 %	\item How do you know if a code base is an application? A release?
@@ -321,7 +323,7 @@ rebar.config
 	\item Почему кто-то может решить использовать поведение \module{gen\_fsm} вместо \module{gen\_server}?
 \end{enumerate}
 
-\subsection*{Тренировочные задания}
+\subsection*{\HandsOnTitle{}}
 
 %Download the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}. This will be used as a test bed for exercises throughout the book. Given you are not familiar with the code base yet, let's see if you can use the tips and tricks mentioned in this chapter to get an understanding of it.
 Скачайте код отсюда: \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}. Этот проект будет использоваться как основа для упражнений по всей книге. Подразумевается, что вы пока не знакомы с этим кодом, давайте посмотрим, как вы воспользуетесь знаниями, полученными в текущей главе и разберётесь что к чему.
@@ -449,12 +451,14 @@ rebar.config
 
 %% erlang.mk downloads relx for releases, and runs it iff there's a relx file there
 
-\subsection{OTP Releases}
+\subsection{Строим OTP-релизы}
 \label{subsec:building-otp-releases}
 
-For releases, the structure should be a bit different\footnote{I say \emph{should} because many Erlang developers put their final system under a single top-level application (in \filename{src}) and a bunch of follower ones as dependencies (in \filename{deps}), which is less than ideal for distribution purposes and conflicts with assumptions on directory structures made by OTP. People who do that tend to build from source on the production servers and run custom commands to boot their applications.}. Releases are collections of applications, and their structures should reflect that.
+%For releases, the structure should be a bit different\footnote{I say \emph{should} because many Erlang developers put their final system under a single top-level application (in \filename{src}) and a bunch of follower ones as dependencies (in \filename{deps}), which is less than ideal for distribution purposes and conflicts with assumptions on directory structures made by OTP. People who do that tend to build from source on the production servers and run custom commands to boot their applications.}. Releases are collections of applications, and their structures should reflect that.
+Для релизов структура должна немного отличаться\footnote{Я пишу \emph{должна} потому что многие Erlang-разработчики размещают свою готовую программу в единственном приложении на верхнем уровне проекта (в папке \filename{src/}) и ряд вспомогательных приложений оформляются, как зависимости (в папке \filename{deps/}), что не совсем идеально для нужд распространения программы и конфликтует с рекомендуемой стандартом ОТР структурой директорий. Люди, которые так делают, обычно собирают код из исходников при установке на производственные сервера и выполняют особые самодельные команды для их запуска.}. Релизы -- это наборы приложений, и их структура должна отражать этот факт.
 
-Instead of having a top-level app, applications should be nested one level deeper and divided into two categories: apps and deps. The apps directory contains your applications' source code (say, internal business code), and the deps directory contains independently managed dependency applications.
+%Instead of having a top-level app, applications should be nested one level deeper and divided into two categories: apps and deps. The apps directory contains your applications' source code (say, internal business code), and the deps directory contains independently managed dependency applications.
+Вместо того, чтобы делать одно приложение верхнего уровня, следует разместить все приложения на один уровень глубже и разделить на две категории: собственно приложения (\emph{apps}) и зависимости (\emph{deps}). Директория \filename{apps/} содержит исходный код вашего приложения (скажем, ваша бизнес-логика), а директория \filename{deps/} содержит ваши зависимости, управляемые другими авторами или командами.
 
 \begin{VerbatimRaw}
 apps/
@@ -465,13 +469,15 @@ README.md
 rebar.config
 \end{VerbatimRaw}
 
-This structure lends itself to generating releases. Tools such as Systool and Reltool have been covered before\footnote{\href{http://learnyousomeerlang.com/release-is-the-word}{http://learnyousomeerlang.com/release-is-the-word}}, and can allow the user plenty of power. An easier tool that recently appeared is \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}.
+%This structure lends itself to generating releases. Tools such as Systool and Reltool have been covered before\footnote{\href{http://learnyousomeerlang.com/release-is-the-word}{http://learnyousomeerlang.com/release-is-the-word}}, and can allow the user plenty of power. An easier tool that recently appeared is \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}.
+Эта структура годится для генерации релизов. Инструменты, такие как Systool и Reltool были описаны в других публикациях\footnote{\href{http://learnyousomeerlang.com/release-is-the-word}{http://learnyousomeerlang.com/release-is-the-word}}, и могут дать пользователю большую власть. Более лёгкий инструмент, который появился совсем недавно -- это \app{relx}\footnote{\href{https://github.com/erlware/relx/wiki}{https://github.com/erlware/relx/wiki}}.
 
-A  \app{relx} configuration file for the directory structure above would look like:
+%A  \app{relx} configuration file for the directory structure above would look like:
+Файл конфигурации для \app{relx}, описывающий структуру директорий, показанную выше, будет выглядеть так:
 
 \begin{VerbatimText}
 {paths, ["apps", "deps"]}.
-{include_erts, false}. % will use currently installed Erlang
+{include_erts, false}. % релиз будет использовать установленный в системе Erlang
 {default_release, demo, "1.0.0"}.
 
 {release, {demo, "1.0.0"},
@@ -481,53 +487,72 @@ A  \app{relx} configuration file for the directory structure above would look li
      recon]}.
 \end{VerbatimText}
 
-Calling \command{./relx} (if the executable is in the current directory) will build a release, to be found in the \filename{\_rel/} directory. If you really like using \app{rebar}, you can build a release as part of the project's compilation by using a rebar hook in \filename{rebar.config}:
+%Calling \command{./relx} (if the executable is in the current directory) will build a release, to be found in the \filename{\_rel/} directory. If you really like using \app{rebar}, you can build a release as part of the project's compilation by using a rebar hook in \filename{rebar.config}:
+Вызов команды \command{./relx} (если исполняемый файл relx находится в текущей директории) начнёт сборку релиза, который будет помещён в директорию \filename{\_rel/}. Если вам нравится пользоваться программой \app{rebar}, то вы можете построить релиз в процессе компиляции проекта используя такую строчку в \filename{rebar.config}:
 
 \begin{VerbatimText}
 {post_hooks,[{compile, "./relx"}]}.
 \end{VerbatimText}
 
-And every time \command{rebar compile} will be called, the release will be generated.
+%And every time \command{rebar compile} will be called, the release will be generated.
+Тогда каждый раз, когда вы вызовете команду \command{rebar compile}, будет создаваться релиз.
 
-\section{Supervisors and start\_link Semantics}
+\section{Наблюдатели и семантика start\_link}
 \label{sec:supervisors-and-start-link-semantics}
 
-In complex production systems, most faults and errors are transient, and retrying an operation is a good way to do things — Jim Gray's paper\footnote{\href{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}} quotes \emph{Mean Times Between Failures} (MTBF) of systems handling transient bugs being better by a factor of 4 when doing this. Still, supervisors aren't just about restarting.
+%In complex production systems, most faults and errors are transient, and retrying an operation is a good way to do things — Jim Gray's paper\footnote{\href{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}} quotes \emph{Mean Times Between Failures} (MTBF) of systems handling transient bugs being better by a factor of 4 when doing this. Still, supervisors aren't just about restarting.
+В сложной производственной (\emph{production}) системе многие сбои и ошибки являются временными, и повторная попытка выполнить операцию -- это хороший подход к ведению дел, согласно работе Джима Грэй \footnote{\href{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}{http://mononcqc.tumblr.com/post/35165909365/why-do-computers-stop}}, которая цитирует, что \emph{среднее время наработки до отказа} (\emph{Mean Times Between Failures или сокращённо MTBF}) систем, которые обрабатывают такие временные ошибки, улучшается в 4 раза. И всё же тема наблюдателей затрагивает больше, чем просто перезапуски.
 
-One very important part of Erlang supervisors and their supervision trees is that \emph{their start phases are synchronous}. Each OTP process has the potential to prevent its siblings and cousins from booting. If the process dies, it's retried again, and again, until it works, or fails too often.
+%One very important part of Erlang supervisors and their supervision trees is that \emph{their start phases are synchronous}. Each OTP process has the potential to prevent its siblings and cousins from booting. If the process dies, it's retried again, and again, until it works, or fails too often.
+Одним из важных фактов о наблюдателях в Erlang и их деревьях наблюдения является то, что \emph{фазы их запуска синхронны}. Каждый процесс в OTP имеет возможность заблокировать запуск своих дочерних и сестринских процессов. Если процесс завершается аварийно (умирает), то попытка повторяется снова и снова, пока он не запустится успешно или наблюдатель не сочтёт, что процесс падает слишком часто.
 
-That's where people make a very common mistake. There isn't a backoff or cooldown period before a supervisor restarts a crashed child. When a network-based application tries to set up a connection during its initialization phase and the remote service is down, the application fails to boot after too many fruitless restarts. Then the system may shut down.
+%That's where people make a very common mistake. There isn't a backoff or cooldown period before a supervisor restarts a crashed child. When a network-based application tries to set up a connection during its initialization phase and the remote service is down, the application fails to boot after too many fruitless restarts. Then the system may shut down.
+Здесь люди часто делают одну общую ошибку. Нет никакой паузы перед тем, как наблюдатель перезапускает упавший дочерний процесс. Когда сетевое приложение пытается установить подключение во время фазы своей инициализации в то время, как удалённый сервис не работает, приложение не может загрузиться после ряда безуспешных перезапусков. Затем система останавливается целиком.
 
-Many Erlang developers end up arguing in favor of a supervisor that has a cooldown period. I strongly oppose the sentiment for one simple reason: \emph{it's all about the guarantees}.
+%Many Erlang developers end up arguing in favor of a supervisor that has a cooldown period. I strongly oppose the sentiment for one simple reason: \emph{it's all about the guarantees}.
+Много Erlang-разработчиков скатываются в споры о создании наблюдателя, который бы имел период ожидания между перезапусками. Я выступаю против этой идеи по одной простой причине: \emph{дело в том, какие вы получаете гарантии}.
 
-\subsection{It's About the Guarantees}
+\subsection{Всё дело в гарантии}
 \label{subsec:start-link-guarantees}
 
-Restarting a process is about bringing it back to a stable, known state. From there, things can be retried. When the initialization isn't stable, supervision is worth very little. An initialized process should be stable no matter what happens. That way, when its siblings and cousins get started later on, they can be booted fully knowing that the rest of the system that came up before them is healthy.
+%Restarting a process is about bringing it back to a stable, known state. From there, things can be retried. When the initialization isn't stable, supervision is worth very little. An initialized process should be stable no matter what happens. That way, when its siblings and cousins get started later on, they can be booted fully knowing that the rest of the system that came up before them is healthy.
+Перезапуск процесса -- это перевод его в стабильное и заранее известное состояние. С этого момента можно повторно выполнять какие-то неудачные операции. Если инициализация нестабильна, то наблюдение за процессом не стоит и гроша. Инициализированный начисто процесс должен быть стабильным что бы ни произошло. Таким образом, когда дочерние и сестринские процессы перезапустятся в будущем, они будут уверены в том, что остальная система, запущенная до них, в хорошем состоянии и исправна.
 
-If you don't provide that stable state, or if you were to start the entire system asynchronously, you would get very little benefit from this structure that a \expression{try ... catch} in a loop wouldn't provide.
+%If you don't provide that stable state, or if you were to start the entire system asynchronously, you would get very little benefit from this structure that a \expression{try ... catch} in a loop wouldn't provide.
+Если вы не обеспечите такое стабильное состояние, или если вы запускаете всю систему асинхронно, то такая структура даст вам мало преимуществ по сравнению с запуском \expression{try} ... \expression{catch} в цикле.
 
-Supervised processes \emph{provide guarantees} in their initialization phase, \emph{not a best effort}. This means that when you're writing a client for a database or service, you shouldn't need a connection to be established as part of the initialization phase unless you're ready to say it will always be available no matter what happens.
+%Supervised processes \emph{provide guarantees} in their initialization phase, \emph{not a best effort}. This means that when you're writing a client for a database or service, you shouldn't need a connection to be established as part of the initialization phase unless you're ready to say it will always be available no matter what happens.
+Процессы под наблюдением \emph{обеспечивают гарантии} в фазе их инициализации, в отличие от \emph{попыток сделать всё возможное}. Это означает, что когда вы пишете клиент для базы данных или сервис, вам не потребуется проверять наличие подключения в ходе фазы инициализации, если вы можете утверждать, что оно всегда будет доступно вне зависимости от ситуации.
 
-You could force a connection during initialization if you know the database is on the same host and should be booted before your Erlang system, for example. Then a restart should work. In case of something incomprehensible and unexpected that breaks these guarantees, the node will end up crashing, which is desirable: a pre-condition to starting your system hasn't been met. It's a system-wide assertion that failed.
+%You could force a connection during initialization if you know the database is on the same host and should be booted before your Erlang system, for example. Then a restart should work. In case of something incomprehensible and unexpected that breaks these guarantees, the node will end up crashing, which is desirable: a pre-condition to starting your system hasn't been met. It's a system-wide assertion that failed.
+Например вы могли бы принудительно выполнить подключение во время инициализации, если вы знаете, что база данных находится на одном с вами сервере и должна запуститься до старта вашей Erlang-системы. Тогда перезапуск сработал бы. В случае, если случится нечто непонятное и неожиданное, нарушающее эти гарантии, то ваш узел завершит работу аварийно, что вполне нам подходит: предварительное условие для запуска системы не было выполнено. Обязательная для старта системы тестовая проверка не прошла.
 
-If, on the other hand, your database is on a remote host, you should expect the connection to fail. It's just a reality of distributed systems that things go down.\footnote{Or latency shoots up enough that it is impossible to tell the difference from failure.} In this case, the only guarantee you can make in the client process is that your client will be able to handle requests, but not that it will communicate to the database. It could return \expression{\{error, not\_connected\}} on all calls during a net split, for example.
+%If, on the other hand, your database is on a remote host, you should expect the connection to fail. It's just a reality of distributed systems that things go down.\footnote{Or latency shoots up enough that it is impossible to tell the difference from failure.} In this case, the only guarantee you can make in the client process is that your client will be able to handle requests, but not that it will communicate to the database. It could return \expression{\{error, not\_connected\}} on all calls during a net split, for example.
+Если же, с другой стороны, ваша база данных находится на удалённом сервере, то следует быть готовыми к тому, что подключение завершится неудачей. Это повседневная реальность распределённых систем -- их части постоянно отказывают\footnote{Или сетевая задержка увеличивается настолько, что становится трудно отличить ситуацию от полного отказа.}. В таком случае единственной гарантией, которую вы можете обеспечить в клиенстком процессе будет то, что ваш клиент сможет обработать запросы, но не подключиться к базе данных. Например, он мог бы возвращать \expression{\{error,} \expression{not\_connected\}} на все вызовы во время разделения сети.
 
-The reconnection to the database can then be done using whatever cooldown or backoff strategy you believe is optimal, without impacting the stability of the system. It can be attempted in the initialization phase as an optimization, but the process should be able to reconnect later on if anything ever disconnects.
+%The reconnection to the database can then be done using whatever cooldown or backoff strategy you believe is optimal, without impacting the stability of the system. It can be attempted in the initialization phase as an optimization, but the process should be able to reconnect later on if anything ever disconnects.
+Повторное подключение к базе данных затем может произойти с любой удобной вам частотой или задержкой, не влияя на стабильность работы системы. Попытка также может быть выполненя в фазе инициализации, в качестве оптимизации, но процесс должен уметь повторно подключиться позже в случае отказа или отключения.
 
-If you expect failure to happen on an external service, do not make its presence a guarantee of your system. We're dealing with the real world here, and failure of external dependencies is always an option. 
+%If you expect failure to happen on an external service, do not make its presence a guarantee of your system. We're dealing with the real world here, and failure of external dependencies is always an option. 
+Если вы ожидаете, что внешний сервис откажет, не делайте его наличие обязательной гарантией для вашей системы. Мы здесь работаем с реальным миром, и отказ внешних зависимостей может произойти в любой момент.
 
-\subsection{Side Effects}
+
+\subsection{Побочные эффекты}
 \label{subsec:start-link-side-effects}
 
-Of course, the libraries and processes that call such a client will then error out if they don't expect to work without a database. That's an entirely different issue in a different problem space, one that depends on your business rules and what you can or can't do to a client, but one that is possible to work around. For example, consider a client for a service that stores operational metrics — the code that calls that client could very well ignore the errors without adverse effects to the system as a whole. 
+%Of course, the libraries and processes that call such a client will then error out if they don't expect to work without a database. That's an entirely different issue in a different problem space, one that depends on your business rules and what you can or can't do to a client, but one that is possible to work around. For example, consider a client for a service that stores operational metrics — the code that calls that client could very well ignore the errors without adverse effects to the system as a whole. 
+Само собой, библиотеки и процессы, которые используют такой клиент, могут вылететь с ошибкой, если они не ожидают неожиданно оказаться без базы данных. Эта проблема совсем иная и лежит в другой плоскости, которая зависит от правил вашей бизнес-логики и того, что вы можете или не можете делать с клиентом, но проблема вполне решаемая. Например, представьте себе клиент некоторого сервиса, хранящий операционные метрики -- код, который вызывает этого клиента, может игнорировать ошибки и они не окажут ощутимого влияния на работу системы в целом.
 
-The difference in both initialization and supervision approaches is that the client's callers make the decision about how much failure they can tolerate, not the client itself. That's a very important distinction when it comes to designing fault-tolerant systems. Yes, supervisors are about restarts, but they should be about restarts to a stable known state.
+%The difference in both initialization and supervision approaches is that the client's callers make the decision about how much failure they can tolerate, not the client itself. That's a very important distinction when it comes to designing fault-tolerant systems. Yes, supervisors are about restarts, but they should be about restarts to a stable known state.
+Разница в подходах к инициализации и наблюдению за процессами в том, что не наш клиент, а вызывающие его процессы принимают решение о том, насколько они готовы терпеть сбои и ошибки. Это очень важное различие, когда дело касается проектирования устойчивых к сбоям систем. Да, наблюдатели только и делают, что занимаются перезапусками, но суть в том, что перезапуски должны приводить к стабильному и известному заранее состоянию.
 
-\subsection{Example: Initializing without guaranteeing connections}
+
+%\subsection{Example: Initializing without guaranteeing connections}
+\subsection{Пример: Инициализация без гарантии подключения}
 \label{subsec:start-link-initializing-without-guaranteeing-connections}
 
-The following code attempts to guarantee a connection as part of the process' state:
+%The following code attempts to guarantee a connection as part of the process' state:
+Следующий код пытается гарантировать наличие живого соединения при запуске процесса:
 
 \begin{VerbatimText}
 init(Args) ->
@@ -538,78 +563,105 @@ init(Args) ->
 [...]
 
 handle_info(reconnect, S = #state{sock=undefined, opts=Opts}) ->
-    %% try reconnecting in a loop
+    %% попытаемся подключиться в цикле
     case connect(Opts) of
         {ok, New} -> {noreply, S#state{sock=New}};
          _ -> self() ! reconnect, {noreply, S}
     end;
 \end{VerbatimText}
 
-Instead, consider rewriting it as:
+%Instead, consider rewriting it as:
+Вместо этого попробуйте переписать его так:
 
 \begin{VerbatimText}
 init(Args) ->
     Opts = parse_args(Args),
-    %% you could try connecting here anyway, for a best
-    %% effort thing, but be ready to not have a connection.
+    %% вы всё равно можете попытаться подключиться прямо здесь, чтобы по 
+    %% возможности улучшить доступность, но будьте готовы, что подключение 
+    %% не удастся
     self() ! reconnect,
     {ok, #state{sock=undefined, opts=Opts}}.
 
 [...]
 
 handle_info(reconnect, S = #state{sock=undefined, opts=Opts}) ->
-    %% try reconnecting in a loop
+    %% попытаемся подключиться в цикле
     case connect(Opts) of
         {ok, New} -> {noreply, S#state{sock=New}};
         _ -> self() ! reconnect, {noreply, S}
     end;
 \end{VerbatimText}
 
-You now allow initializations with fewer guarantees: they went from \emph{the connection is available} to \emph{the connection manager is available}.
+%You now allow initializations with fewer guarantees: they went from \emph{the connection is available} to \emph{the connection manager is available}.
+\sloppy{}
+Теперь вы можете позволить инициализацию с меньшим количеством гарантий: раньше требовалась гарантия \emph{наличия подключения}, а сейчас требуется просто \emph{наличие менеджера подключений}.
 
-\subsection{In a nutshell}
+
+\subsection{В двух словах}
 \label{subsec:start-link-in-a-nutshell}
 
-Production systems I have worked with have been a mix of both approaches.
+%Production systems I have worked with have been a mix of both approaches.
+Производственные (\emph{production}) системы, с которыми мне довелось работать, использовали и тот и другой подход.
 
-Things like configuration files, access to the file system (say for logging purposes), local resources that can be depended on (opening UDP ports for logs), restoring a stable state from disk or network, and so on, are things I'll put into requirements of a supervisor and may decide to synchronously load no matter how long it takes (some applications may just end up having over 10 minute boot times in rare cases, but that's okay because we're possibly syncing gigabytes that we \emph{need} to work with as a base state if we don't want to serve incorrect information.)
+%Things like configuration files, access to the file system (say for logging purposes), local resources that can be depended on (opening UDP ports for logs), restoring a stable state from disk or network, and so on, are things I'll put into requirements of a supervisor and may decide to synchronously load no matter how long it takes (some applications may just end up having over 10 minute boot times in rare cases, but that's okay because we're possibly syncing gigabytes that we \emph{need} to work with as a base state if we don't want to serve incorrect information.)
+Такие вещи, как файлы конфигурации, доступ к файловой системе (например, для потребностей ведения файлов журналов), локальные ресурсы, от которых могла бы зависеть система (открытие UDP-портов для ведения журналов), восстановление стабильного состояния из диска или по сети и так далее. Это те вещи, которые я помещаю в требования к наблюдателю и могу решить загрузить их синхронно независимо от того, сколько бы это ни потребовало времени (некоторые приложения иногда могут требовать более десяти минут для запуска, но это приемлемо, поскольку мы в этот момент перелопачиваем гигабайты, которые нам \emph{нужны} для работы в качестве базового состояния, если мы не хотим отдавать клиентам некорректные или неполные ответы).
 
-On the other hand, code that depends on non-local databases and external services will adopt partial startups with quicker supervision tree booting because if the failure is expected to happen often during regular operations,
-then there's no difference between now and later. You have to handle it the same, and for these parts of the system, far less strict guarantees are often the better solution.
+%On the other hand, code that depends on non-local databases and external services will adopt partial startups with quicker supervision tree booting because if the failure is expected to happen often during regular operations, 
+%then there's no difference between now and later. You have to handle it the same, and for these parts of the system, far less strict guarantees are often the better solution.
+С другой стороны код, который зависит от удалённых баз данных и внешних сервисов, будет использовать запуск с частичными подключениями для ускорения запуска деревьев наблюдения, поскольку сбои ожидаются достаточно часто во время обычной работы, то и нет разницы в том, случится ли сбой при запуске или позже. Ваш подход к обработке этих ситуаций будет одинаковым, и для этих частей системы намного лучшим решением будет уменьшение гарантий.
 
-\subsection{Application Strategies}
+
+%Application Strategies
+\subsection{Стратегии приложений}
 \label{subsec:start-link-application-strategies}
 
-No matter what, a sequence of failures is not a death sentence for the node. Once a system has been divided into various OTP applications, it becomes possible to choose which applications are vital or not to the node. Each OTP application can be started in 3 ways: temporary, transient, permanent, either by doing it manually in \expression{application:start(Name, Type)}, or in the config file for your release:
+%No matter what, a sequence of failures is not a death sentence for the node. Once a system has been divided into various OTP applications, it becomes possible to choose which applications are vital or not to the node. Each OTP application can be started in 3 ways: temporary, transient, permanent, either by doing it manually in \expression{application:start(Name, Type)}, or in the config file for your release:
+\sloppy{}
+Вне зависимости от того, что произошло, ряд отказов не является смертельным приговором для узла. Как только система разделена на различные ОТР-приложения, становится возможным выбирать, какие из приложений являются жизненно-важными для узла. Каждое из приложений в ОТР может запускаться в трёх режимах: как временное (\emph{temporary}), преходящее или недолговечное (\emph{transient}) или постоянное (\emph{permanent}). Это делается либо вручную, выполняя команду \expression{application:start(Имя, Тип)}, либо из файла конфигурации вашего релиза:
 
 \begin{itemize*}
-	\item \term{permanent}: if the app terminates, the entire system is taken down, excluding manual termination of the app with \function{application:stop/1}.
-	\item \term{transient}: if the app terminates for reason \term{normal}, that's ok. Any other reason for termination shuts down the entire system.
-	\item \term{temporary}: the application is allowed to stop for any reason. It will be reported, but nothing bad will happen.
+%	\item \term{permanent}: if the app terminates, the entire system is taken down, excluding manual termination of the app with \function{application:stop/1}.
+	\item Постоянное (\term{permanent}): если приложение завершит работу, то вся система останавливается, кроме тех случаев, когда приложение было остановлено вручную командой \function{application:stop/1}.
+%	\item \term{transient}: if the app terminates for reason \term{normal}, that's ok. Any other reason for termination shuts down the entire system.
+	\item Преходящее (\term{transient}): если приложение завершится по причине \term{normal}, то всё в порядке. Любая другая причина завершения работы останавливает всю систему.
+%	\item \term{temporary}: the application is allowed to stop for any reason. It will be reported, but nothing bad will happen.
+	\item Временное (\term{temporary}): приложению разрешено останавливаться нормально и аварийно, по любой причине. О ситуации будет доложено в журналы или на экран, но ничего плохого больше не произойдёт.
 \end{itemize*}
 
-It is also possible to start an application as an \emph{included application}, which starts it under your own OTP supervisor with its own strategy to restart it.
+%It is also possible to start an application as an \emph{included application}, which starts it under your own OTP supervisor with its own strategy to restart it.
+Также возможно запустить приложение в качестве \emph{вложенного приложения} (\emph{included application}), что запустит его под наблюдателем ОТР со своей собственной стратегией перезапуска.
 
-\section{Exercises}
 
-\subsection*{Review Questions}
+\section{Упражнения}
+
+\subsection*{\ReviewTitle}
 
 \begin{enumerate}
-	\item  Are Erlang supervision trees started depth-first? breadth-first? Synchronously or asynchronously?
-	\item What are the three application strategies? What do they do?
-	\item What are the main differences between the directory structure of an app and a release?
-	\item When should you use a release?
-	\item Give two examples of the type of state that can go in a process' init function, and two examples of the type of state that shouldn't go in a process' init function
+%	\item  Are Erlang supervision trees started depth-first? breadth-first? Synchronously or asynchronously?
+	\item Запускаются ли деревья наблюдения в Erlang в глубину или в ширину? Синхронно или асинхронно?
+%	\item What are the three application strategies? What do they do?
+	\item Какие бывают три стратегии приложений? Что они делают?
+%	\item What are the main differences between the directory structure of an app and a release?
+	\item Какие главные различия между структурами директорий приложения и релиза?
+%	\item When should you use a release?
+	\item Когда следует использовать релиз?
+%	\item Give two examples of the type of state that can go in a process' init function, and two examples of the type of state that shouldn't go in a process' init function
+	\item Дайте два примера состояний, которые могут быть помещены в функцию инициализации процесса и два примера состояний, которые не следует туда помещать.
 \end{enumerate}
 
-\subsection*{Hands-On}
+\subsection*{\HandsOnTitle{}}
 
-Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}:
+%Using the code at
+Используйте код, который находится по адресу
+\href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}:
 
 \begin{enumerate}
-	\item Extract the main application hosted in the release to make it independent, and includable in other projects.
-	\item Host the application somewhere (Github, Bitbucket, local server), and build a release with that application as a dependency.
-	\item The main application's workers (\module{council\_member}) starts a server and connects to it in its \function{init/1} function. Can you make this connection happen outside of the init function's? Is there a benefit to doing so in this specific case?
+%	\item Extract the main application hosted in the release to make it independent, and includable in other projects.
+	\item Извлеките главное приложение, которое хранится в релизе, и сделайте его независимым с возможностью включения в другие проекты.
+%	\item Host the application somewhere (Github, Bitbucket, local server), and build a release with that application as a dependency.
+	\item Разместите приложение где-нибудь (Github, Bitbucket или ваш собственный сервер) и соберите релиз с этим приложением в качестве зависимости.
+%	\item The main application's workers (\module{council\_member}) starts a server and connects to it in its \function{init/1} function. Can you make this connection happen outside of the init function's? Is there a benefit to doing so in this specific case?
+	\item Рабочий процесс главного приложения (\module{council\_member}) запускает сервер и подключается к нему в своей функции \function{init/1}. Можно ли сделать это подключение за пределами функции init? Есть ли выгода от этого в данном конкретном случае?
 \end{enumerate}
 
 %%
@@ -650,36 +702,47 @@ Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/
 %%%
 %%%
 
-
-\chapter{Planning for Overload}
+%Planning for Overload
+\chapter{В ожидании перегрузки}
 \label{chap:overload}
 
-By far, the most common cause of failure I've encountered in real-world scenarios is due to the node running out of memory. Furthermore, it is usually related to message queues going out of bounds.\footnote{Figuring out that a message queue is the problem is explained in Chapter \ref{chap:crash-dumps}, specifically in Section \ref{sec:crash-full-mailboxes}} There are plenty of ways to deal with this, but knowing which one to use will require a decent understanding of the system you're working on.
+%By far, the most common cause of failure I've encountered in real-world scenarios is due to the node running out of memory. Furthermore, it is usually related to message queues going out of bounds.\footnote{Figuring out that a message queue is the problem is explained in Chapter \ref{chap:crash-dumps}, specifically in Section \ref{sec:crash-full-mailboxes}} There are plenty of ways to deal with this, but knowing which one to use will require a decent understanding of the system you're working on.
+Без сомнения одной из самых частых причин сбоев, которые мне встречались в ситуациях реального мира, это переполнение памяти на узлах. Более того, обычно это связано с очередями сообщений, которые растут бесконтрольно\footnote{Как разобраться, что именно очередь сообщений оказалась проблемой, объясняется в Главе \ref{chap:crash-dumps}, а именно в Секции \ref{sec:crash-full-mailboxes}}. Есть множество способов справиться с этой бедой, но выбор правильного решения потребует хорошего понимания системы, с которой вам довелось работать.
 
-To oversimplify things, most of the projects I end up working on can be visualized as a very large bathroom sink. User and data input are flowing from the faucet. The Erlang system itself is the sink and the pipes, and wherever the output goes (whether it's a database, an external API or service, and so on) is the sewer system.
+%To oversimplify things, most of the projects I end up working on can be visualized as a very large bathroom sink. User and data input are flowing from the faucet. The Erlang system itself is the sink and the pipes, and wherever the output goes (whether it's a database, an external API or service, and so on) is the sewer system.
+Если говорить упрощённо, то большинство проектов, с которыми мне пришлось работать, могут быть изображены в виде кухонной раковины. Пользовательские и входящие данные вытекают из крана. Erlang-система является раковиной и трубами, а то, куда идёт вывод результатов (неважно, что это, база данных или внешний сервис) -- является канализацией.
 
 \begin{figure}[h!]
   \includegraphics[max height=7cm]{sink.pdf}%
   \centering%
 %  \caption{Your system is like a sink, and the true bottleneck, at the last drain, needs to be identified before you spend all your time and money making the sink and pipes bigger.}%
+%\caption{Ваша система в виде раковины, и настоящее узкое место в последней трубе должно быть обнаружено до того, как вы потратите слишком много времени и денег увеличивая трубы и раковину.}
    \label{fig:tracing-venn}
 \end{figure}
 
-When an Erlang node dies because of a queue overflowing, figuring out who to blame is crucial. Did someone put too much water in the sink? Are the sewer systems backing up? Did you just design too small a pipe?
+%When an Erlang node dies because of a queue overflowing, figuring out who to blame is crucial. Did someone put too much water in the sink? Are the sewer systems backing up? Did you just design too small a pipe?
+Когда узел Erlang умирает по причине переполнения очереди, очень важно найти виновного. Вдруг налили слишком много воды? Справляется ли канализация? Не занизили ли вы размеры труб в проекте?
 
-Determining what queue blew up is not necessarily hard. This is information that can be found in a crash dump. Finding out why it blew up is trickier. Based on the role of the process or run-time inspection, it's possible to figure out whether causes include fast flooding, blocked processes that won't process messages fast enough, and so on.
+%Determining what queue blew up is not necessarily hard. This is information that can be found in a crash dump. Finding out why it blew up is trickier. Based on the role of the process or run-time inspection, it's possible to figure out whether causes include fast flooding, blocked processes that won't process messages fast enough, and so on.
+Определить, какая из очередей взлетела на воздух будет нетрудно. Эту информацию можно обнаружить в файле дампа после смерти узла. А вот поиск причины, по которой это произошло -- более хитрая задача. Основываясь на роли процесса или изучении ситуации во время работы системы, можно вычислить причины -- произошёл ли резкий всплеск числа сообщений, заблокированные процессы, которые не успевали выбирать сообщения, и так далее.
 
-The most difficult part is to decide how to fix it. When the sink gets clogged up by too much waste, we will usually start by trying to make the bathroom sink itself larger (the part of our program that crashed, at the edge). Then we figure out the sink's drain is too small, and optimize that. Then we find out the pipes themselves are too narrow, and optimize that. The overload gets pushed further down the system, until the sewers can't take it anymore. At that point, we may try to add sinks or add bathrooms to help with the global input level.
+%The most difficult part is to decide how to fix it. When the sink gets clogged up by too much waste, we will usually start by trying to make the bathroom sink itself larger (the part of our program that crashed, at the edge). Then we figure out the sink's drain is too small, and optimize that. Then we find out the pipes themselves are too narrow, and optimize that. The overload gets pushed further down the system, until the sewers can't take it anymore. At that point, we may try to add sinks or add bathrooms to help with the global input level.
+Самой трудной частью будет принятие решения о способе починки. Когда раковина заполняется отходами, мы обычно пытаемся увеличить размеры раковины (та часть программы, которая упала, первое, что мы видим). Затем мы догадываемся, что сток слишком мал и пытаемся улучшить этот момент. Затем обнаруживается, что трубы слишком узкие, и решаем эту проблему. Перегрузка оттесняется вглубь системы до тех пор, пока канализация не отказывается увеличивать принятые объёмы. В этот момент мы можем решить добавить больше раковин или увеличить число ванных комнат для решения проблемы с входными данными.
 
-Then there's a point where things can't be improved anymore at the bathroom's level. There are too many logs sent around, there's a bottleneck on databases that \emph{need} the consistency, or there's simply not enough knowledge or manpower in your organization to improve things there.
+%Then there's a point where things can't be improved anymore at the bathroom's level. There are too many logs sent around, there's a bottleneck on databases that \emph{need} the consistency, or there's simply not enough knowledge or manpower in your organization to improve things there.
+Затем наступает момент, когда на уровне ванной комнаты мы больше ничего не можем улучшить. Слишком много событий отправляется в журналы сообщений, или база данных с обязательным \emph{требованием целостности} оказалась узким местом, или в нашей компании просто не хватает людей или ума, чтобы улучшить что-нибудь ещё.
 
-By finding that point, we identified what the \emph{true bottleneck} of the system was, and all the prior optimization was nice (and likely expensive), but it was more or less in vain.
+%By finding that point, we identified what the \emph{true bottleneck} of the system was, and all the prior optimization was nice (and likely expensive), but it was more or less in vain.
+Когда мы находим эту границу, можно считать, что \emph{истинное узкое место} системы было обнаружено, и вся предыдущая оптимизация была полезной (и, наверное, дорогой), но всё было сделано зря.
 
-We need to be more clever, and so things are moved back up a level. We try to massage the information going in the system to make it either lighter (whether it is through compression, better algorithms and data representation, caching, and so on). 
+%We need to be more clever, and so things are moved back up a level. We try to massage the information going in the system to make it either lighter (whether it is through compression, better algorithms and data representation, caching, and so on). 
+Нам нужно быть умнее, и перенести наше внимание на уровень выше. Мы попытаемся заняться информацией, входящей в систему, и сделать её легче (с помощью сжатия, улучшения алгоритмов или представления данных, кэширования и так далее).
 
-Even then, there are times where the overload will be too much, and we have to make the hard decisions between restricting the input to the system, discarding it, or accepting that the system will reduce its quality of service up to the point it will crash. These mechanisms fall into two broad strategies: back-pressure and load-shedding.
+%Even then, there are times where the overload will be too much, and we have to make the hard decisions between restricting the input to the system, discarding it, or accepting that the system will reduce its quality of service up to the point it will crash. These mechanisms fall into two broad strategies: back-pressure and load-shedding.
+Бывают моменты, когда перегрузка слишком сильная, и нам приходится принимать трудный выбор между ограничением ввода в систему, уничтожением части входящих данных или смириться с фактом, что система понизит качество обслуживания вплоть до полной аварийной остановки. Эти механизмы можно объединить в две широкие категории: обратное давление (\emph{back-pressure}) и сброс лишней нагрузки (\emph{load-shedding}).
 
-We'll explore them in this chapter, along with common events that end up causing Erlang systems to blow up.
+%We'll explore them in this chapter, along with common events that end up causing Erlang systems to blow up.
+Мы рассмотрим их в этой главе вместе с общими событиями, которые могут привести к тому, что Erlang-системы взлетают на воздух.
 
 \section{Common Overload Sources}
 
