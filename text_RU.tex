@@ -6,6 +6,7 @@
 \newcommand{\HandsOnTitle}{Тренировочные задания}
 \newcommand{\ReviewTitle}{Вопросы для закрепления материала}
 \newcommand{\OpenEndedTitle}{Открытые вопросы}
+\newcommand\NamedRef[1]{\ref{#1} <<\nameref{#1}>>}
 
 %%% Cover
 
@@ -1218,25 +1219,32 @@ User switch command
 
 \section{Remsh}
 
-There's a mechanism entirely similar to the one available through the JCL mode, although invoked in a different manner. The entire JCL mode sequence can by bypassed by starting the shell as follows for long names:
+%There's a mechanism entirely similar to the one available through the JCL mode, although invoked in a different manner. The entire JCL mode sequence can by bypassed by starting the shell as follows for long names:
+Существует механизм совершенно подобный тому, что доступен через режим JCL, хотя вызывается он несколько иначе. Все шаги, связанные с режимом JCL, можно пропустить если запустить интерпретатор следующим образом (для длинных имён):
 
 \begin{VerbatimText}
 erl -name local@domain.name -remsh remote@domain.name
 \end{VerbatimText}
 
-And as follows for short names:
+%And as follows for short names:
+И таким образом для коротких имён:
 
 \begin{VerbatimText}
 erl -sname local@domain -remsh remote@domain
 \end{VerbatimText}
 
-All other Erlang arguments (such as \command{-hidden} and \command{-setcookie \$COOKIE}) are also valid. The underlying mechanisms are the same as when using JCL mode, but the initial shell is started remotely instead of locally (JCL is still local). \command{\^{}G}  remains the safest way to exit the remote shell.
+%All other Erlang arguments (such as \command{-hidden} and \command{-setcookie \$COOKIE}) are also valid. The underlying mechanisms are the same as when using JCL mode, but the initial shell is started remotely instead of locally (JCL is still local). \command{\^{}G}  remains the safest way to exit the remote shell.
+Все другие аргументы Erlang (такие, как \command{-hidden} и \command{-setcookie \$COOKIE}) тоже разрешены. Внутренние механизмы действуют точно так же, как и в режиме JCL, но интерпретатор сразу запускается удалённо вместо локального (JCL работает локально). Клавиша \command{\Circum{}G} остаётся самым безопасным способом, чтобы покинуть удалённую консоль интерпретатора.
 
-\section{SSH Daemon}
 
-Erlang/OTP comes shipped with an SSH implementation that can both act as a server and a client. Part of it is a demo application providing a remote shell working in Erlang.
+%\section{SSH Daemon}
+\section{SSH-демон}
 
-To get this to work, you usually need to have your keys to have access to SSH stuff remotely in place already, but for quick test purposes, you can get things working by doing:
+%Erlang/OTP comes shipped with an SSH implementation that can both act as a server and a client. Part of it is a demo application providing a remote shell working in Erlang.
+Erlang/OTP содержит в стандартной поставке реализацию протокола SSH, которая может действовать как в качестве сервера, так и клиента. Часть его является демонстрационным приложением, которое открывает удалённый терминал, работающий с Erlang.
+
+%To get this to work, you usually need to have your keys to have access to SSH stuff remotely in place already, but for quick test purposes, you can get things working by doing:
+Обычно требуется, чтобы ключи находились в соответствующей директории, чтобы получить удалённый доступ к SSH. Но для нашего теста будет вполне достаточно выполнить следующие команды:
 
 \begin{VerbatimEshell}
 $ mkdir /tmp/ssh
@@ -1251,9 +1259,11 @@ $ erl
 {ok,<0.52.0>}
 \end{VerbatimEshell}
 
-I've only set a few options here, namely \expression{system\_dir}, which is where the host files are, and \expression{user\_dir}, which contains SSH configuration files. There are plenty of other options available to allow for specific passwords, customize handling of public keys, and so on\footnote{Complete instructions with all options to get this set up are available at \href{http://www.erlang.org/doc/man/ssh.html\#daemon-3}{http://www.erlang.org/doc/man/ssh.html\#daemon-3}.}.
+%I've only set a few options here, namely \expression{system\_dir}, which is where the host files are, and \expression{user\_dir}, which contains SSH configuration files. There are plenty of other options available to allow for specific passwords, customize handling of public keys, and so on\footnote{Complete instructions with all options to get this set up are available at \href{http://www.erlang.org/doc/man/ssh.html\#daemon-3}{http://www.erlang.org/doc/man/ssh.html\#daemon-3}.}.
+Здесь я задал всего лишь несколько параметров, в частности \expression{system\_dir}, которая указывает, где находятся файлы ключей, и \expression{user\_dir}, указывающий директорию с файлами конфигурации SSH. Есть множество других параметров, позволяющих задавать пароли, настраивать управление публичными ключами и так далее\footnote{Полная инструкция по всем параметрам доступна здесь: \href{http://www.erlang.org/doc/man/ssh.html\#daemon-3}{http://www.erlang.org/doc/man/ssh.html\#daemon-3}.}.
 
-To connect to the daemon, any SSH client will do:
+%To connect to the daemon, any SSH client will do:
+Для подключения к демону подходит любой SSH-клиент:
 
 \begin{VerbatimEshell}
 $ ssh -p 8989 ferd@127.0.0.1
@@ -1261,20 +1271,28 @@ Eshell Vx.x.x  (abort with ^G)
 1> 
 \end{VerbatimEshell}
 
-And with this you can interact with an Erlang installation without having it installed on the current machine. Just disconnecting from the SSH session (closing the terminal) will be enough to leave. \emph{Do not run} functions such as \expression{q()} or \expression{init:stop()}, which will terminate the remote host.\footnote{This is true for all methods of interacting with a remote Erlang node.}
+%And with this you can interact with an Erlang installation without having it installed on the current machine. Just disconnecting from the SSH session (closing the terminal) will be enough to leave. \emph{Do not run} functions such as \expression{q()} or \expression{init:stop()}, which will terminate the remote host.\footnote{This is true for all methods of interacting with a remote Erlang node.}
+Таким образом вы сможете взаимодействовать с установленной Erlang-системой без необходимости устанавливать её на вашей локальной машине. Простое отключение SSH-сессии достаточно для того, чтобы покинуть консоль. \emph{Не выполняйте} функции остановки узла, такие как \expression{q()} или \expression{init:stop()}, которые приведут к остановке удалённого сервера\footnote{Этот совет действителен для всех способов взаимодействия с удалённым узлом Erlang.}.
 
-If you have trouble connecting, you can add the \command{-oLogLevel=DEBUG} option to \app{ssh} to get debug output.
+%If you have trouble connecting, you can add the \command{-oLogLevel=DEBUG} option to \app{ssh} to get debug output.
+Если у вас возникли проблемы с подключением, можно добавить к \app{ssh} опцию \command{-oLogLevel=DEBUG} для получения подробного пошагового вывода и помощи в поиске проблемы.
 
-\section{Named Pipes}
 
-A little known way to connect with an Erlang node that requires no explicit distribution is through named pipes. This can be done by starting Erlang with \app{run\_erl}, which wraps Erlang in a named pipe\footnote{\command{"erl"} is the command being run. Additional arguments can be added after it. For example \command{"erl +K true"} will turn kernel polling on.}:
+%\section{Named Pipes}
+\section{Именованные каналы}
+
+%A little known way to connect with an Erlang node that requires no explicit distribution is through named pipes. This can be done by starting Erlang with \app{run\_erl}, which wraps Erlang in a named pipe\footnote{\command{"erl"} is the command being run. Additional arguments can be added after it. For example \command{"erl +K true"} will turn kernel polling on.}:
+Малоизвестный способ подключения к узлу Erlang, который не требует никаких особых параметров для распределённого режима --- с помощью именованных каналов (\emph{named pipes}). Чтобы это сделать, надо запустить Erlang командой \app{run\_erl}, которая обернёт его ввод и вывод в именованный канал\footnote{На самом деле выполняется команда \command{"erl"}. Дополнительные аргументы можно добавить в конце команды. Например, \command{"erl +K true"} включит режим kernel poll.}:
+
 \begin{VerbatimEshell}
 $ run_erl /tmp/erl_pipe /tmp/log_dir "erl"
 \end{VerbatimEshell}
 
-The first argument is the name of the file that will act as the named pipe. The second one is where logs will be saved\footnote{Using this method ends up calling fsync for each piece of output, which may give quite a performance hit if a lot of IO is taking place over standard output}.
+%The first argument is the name of the file that will act as the named pipe. The second one is where logs will be saved\footnote{Using this method ends up calling fsync for each piece of output, which may give quite a performance hit if a lot of IO is taking place over standard output}.
+Первый аргумент -- это имя файла, который будет именованным каналом. Второе --- директория, куда будут писаться файлы журналов\footnote{Использование этого метода будет вызывать fsync для каждого фрагмента вывода, что может дать ощутимый удар по производительности, если ваша программа выводит много на экран (стандартный вывод).}.
 
-To connect to the node, you use the \app{to\_erl} program:
+%To connect to the node, you use the \app{to\_erl} program:
+Для подключения к такому узлу используйте программу \app{to\_erl}:
 
 \begin{VerbatimEshell}
 $ to_erl /tmp/erl_pipe
@@ -1283,21 +1301,29 @@ Attaching to /tmp/erl_pipe (^D to exit)
 1>
 \end{VerbatimEshell}
 
-And the shell is connected. Closing stdio (with \command{\^{}D}) will disconnect from the shell while leaving it running.
+%And the shell is connected. Closing stdio (with \command{\^{}D}) will disconnect from the shell while leaving it running.
+И вот, консоль подключена. Закрытие стандартного ввода-вывода (нажатием клавиши \command{\Circum{}D}) отключится от вашей консоли, оставляя программу запущенной.
 
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item What are the 4 ways to connect to a remote node?
-	\item Can you connect to a node that wasn't given a name?
-	\item What's the command to go into the Job Control Mode (JCL)?
-	\item Which method(s) of connecting to a remote shell should you avoid for a system that outputs a lot of data to standard output?
-	\item What instances of remote connections shouldn't be disconnected using \command{\^{}G}?
-	\item What command(s) should never be used to disconnect from a session?
-	\item Can all of the methods mentioned support having multiple users connected onto the same Erlang node without issue?
+%	\item What are the 4 ways to connect to a remote node?
+	\item Какие есть 4 способа подключения к удалённому узлу?
+%	\item Can you connect to a node that wasn't given a name?
+	\item Можно ли подключиться к узлу, если ему не было дано имя?
+%	\item What's the command to go into the Job Control Mode (JCL)?
+	\item Какая команда переходит в режим Job Control Mode (JCL)?
+%	\item Which method(s) of connecting to a remote shell should you avoid for a system that outputs a lot of data to standard output?
+	\item Какой(какие) методы подключения к удалённой консоли не очень подходят, если система выводит много данных на стандартный вывод?
+%	\item What instances of remote connections shouldn't be disconnected using \command{\^{}G}?
+	\item Какие из удалённых подключений не следует отключать нажатием клавиш \command{\Circum{}G}?
+%	\item What command(s) should never be used to disconnect from a session?
+	\item Какие команды нельзя использовать для отключения сессии?
+%	\item Can all of the methods mentioned support having multiple users connected onto the same Erlang node without issue?
+	\item Все ли перечисленные методы поддерживают множество одновременно подключенных к одной Erlang-системе пользователей без проблем?
 \end{enumerate}
 %%%
 %%%
@@ -1338,44 +1364,64 @@ And the shell is connected. Closing stdio (with \command{\^{}D}) will disconnect
 %%%
 %%%
 
-\chapter{Runtime Metrics}
+%\chapter{Runtime Metrics}
+\chapter{Метрики времени выполнения}
 \label{chap:runtime-metrics}
 
-One of the best selling points of the Erlang VM for production use is how transparent it can be for all kinds of introspection, debugging, profiling, and analysis at run time.
+%One of the best selling points of the Erlang VM for production use is how transparent it can be for all kinds of introspection, debugging, profiling, and analysis at run time.
+Одной из наиболее хорошо продаваемых характеристик виртуальной машины Erlang для производственного использования является то, как она прозрачна для всех способов диагностики, отладки, профилирования и анализа на ходу во время выполнения.
 
-The advantage of having these runtime metrics accessible programmatically is that building tools relying on them is easy, and building automation for some tasks or watchdogs is equally simple\footnote{Making sure your automated processes don't run away and go overboard with whatever corrective actions they take is more complex}. Then, in times of need, it's also possible to bypass the tools and go direct to the VM for information.
+%The advantage of having these runtime metrics accessible programmatically is that building tools relying on them is easy, and building automation for some tasks or watchdogs is equally simple\footnote{Making sure your automated processes don't run away and go overboard with whatever corrective actions they take is more complex}. Then, in times of need, it's also possible to bypass the tools and go direct to the VM for information.
+Преимуществом наличия таких метрик, доступных программно, является то, что построение как инструментов так и скриптов для автоматизации, которые на них основаны оказывается вполне простым\footnote{Гораздо сложнее гарантировать, что автоматизированные процессы не переборщили с исправительными мерами.}. Затем, когда понадобится, возможно избавиться от инструментов и обратиться прямо к виртуальной машине и запросить нужную информацию.
 
-A practical approach to growing a system and keeping it healthy in production is to make sure all angles are observable: in the large, and in the small. There's no generic recipe to tell in advance what is going to be normal or not. You want to keep a lot of data and to look at it from time to time to form an idea about what your system looks like under normal circumstances. The day something goes awry, you will have all these angles you've grown to know, and it will be simpler to find what is off and needs fixing.
+%A practical approach to growing a system and keeping it healthy in production is to make sure all angles are observable: in the large, and in the small. There's no generic recipe to tell in advance what is going to be normal or not. You want to keep a lot of data and to look at it from time to time to form an idea about what your system looks like under normal circumstances. The day something goes awry, you will have all these angles you've grown to know, and it will be simpler to find what is off and needs fixing.
+Практическим подходом к росту системы и поддержанию её в хорошем здоровье на производственном (\emph{production}) сервере --- это убедиться, что систему можно наблюдать со всех углов, как в большом масштабе, так и все мельчайшие её детали. Нет общего рецепта, который сразу скажет вам является ли тот или иной показатель нормальным или аварийным. Вам следует сохранять множество данных и время от времени смотреть на них, чтобы сформировать своё мнение о том, как система выглядит в обычных условиях. В тот день, когда что-то пойдёт не так, у вас будет опыт всех этих точек зрения, к которым вы привыкли, и вам будет легче обнаружить, что вышло из-под контроля и требует ремонта.
 
-For this chapter (and most of those that follow), most of the concepts or features to be shown are accessible through code in the standard library, part of the regular OTP distribution. 
+%For this chapter (and most of those that follow), most of the concepts or features to be shown are accessible through code in the standard library, part of the regular OTP distribution. 
+Для этой главы (и многих глав после этой), многие показанные концепции или возможности доступны прямо из вашего кода с помощью стандартных библиотек, которые являются частью каждого дистрибутива OTP.
 
-However, these features aren't all in one place, and can make it too easy to shoot yourself in the foot within a production system. They also tend to be closer to building blocks than usable tools.
+%However, these features aren't all in one place, and can make it too easy to shoot yourself in the foot within a production system. They also tend to be closer to building blocks than usable tools.
+Однако эти возможности не сложены в одном месте, и могут очень облегчить задачу простреливания себе ноги на производственной системе. Также они стремятся быть скорее строительными блоками, чем готовыми к использованию инструментами.
 
-Therefore, to make the text lighter and to be more usable, common operations have been regrouped in the \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/}} library, and are generally production-safe.
+%Therefore, to make the text lighter and to be more usable, common operations have been regrouped in the \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/}} library, and are generally production-safe.
+Таким образом, чтобы сделать текст книги легче для чтения и удобнее, я сгруппировал общие операции в библиотеке \otpapp{recon}\footnote{\href{http://ferd.github.io/recon/}{http://ferd.github.io/recon/}} и они в целом безопасны для использования на производственной системе.
 
-\section{Global View}
+%\section{Global View}
+\section{Вид сверху}
 \label{sec:global-view}
 
-For a view of the VM in the large, it's useful to track statistics and metrics general to the VM, regardless of the code running on it. Moreover, you should aim for a solution that allows long-term views of each metric — some problems show up as a very long accumulation over weeks that couldn't be detected over small time windows.
+%For a view of the VM in the large, it's useful to track statistics and metrics general to the VM, regardless of the code running on it. Moreover, you should aim for a solution that allows long-term views of each metric — some problems show up as a very long accumulation over weeks that couldn't be detected over small time windows.
+Для осмотра состояния виртуальной машины в большом масштабе полезно собирать статистику и метрики общие для виртуальной машины, независимо от того, что на ней выполняется. Более того, следует стремиться к решению, которое позволяет хранить долгосрочную историю каждой метрики --- некоторые проблемы проявляются в виде долгого накопления в течение недель, которое нельзя увидеть за небольшой промежуток времени.
 
-Good examples for issues exposed by a long-term view include memory or process leaks, but also could be regular or irregular spikes in activities relative to the time of the day or week, which can often require having months of data to be sure about it.
+%Good examples for issues exposed by a long-term view include memory or process leaks, but also could be regular or irregular spikes in activities relative to the time of the day or week, which can often require having months of data to be sure about it.
+Хорошие примеры проблем, которые можно обнаружить глядя на историю за долгое время --- это утечки памяти или процессов, обычные или необычные всплески активности относительно времени дня или недели, что часто требует наличие многомесячных архивов данных для укрепления уверенности в догадках.
 
-For these cases, using existing Erlang metrics applications is useful. Common options are:
+%For these cases, using existing Erlang metrics applications is useful. Common options are:
+Для этих случаев полезно использовать существующие Erlang-приложения для сбора метрик. Общепринятыми вариантами обычно являются следующие:
 
 \begin{itemize*}
-	\item \otpapp{folsom}\footnote{\href{https://github.com/boundary/folsom}{https://github.com/boundary/folsom}} to store metrics in memory within the VM, whether global or app-specific..
-	\item \otpapp{vmstats}\footnote{\href{https://github.com/ferd/vmstats}{https://github.com/ferd/vmstats}} and \otpapp{statsderl}\footnote{\href{https://github.com/lpgauth/statsderl}{https://github.com/lpgauth/statsderl}}, sending node metrics over to graphite through \app{statsd}\footnote{\href{https://github.com/etsy/statsd/}{https://github.com/etsy/statsd/}}.
-	\item \otpapp{exometer}\footnote{\href{https://github.com/Feuerlabs/exometer}{https://github.com/Feuerlabs/exometer}}, a fancy-pants metrics system that can integrate with \otpapp{folsom} (among other things),  and a variety of back-ends (graphite, collectd, \app{statsd}, Riak, SNMP, etc.). It's the newest player in town
-	\item \otpapp{ehmon}\footnote{\href{https://github.com/heroku/ehmon}{https://github.com/heroku/ehmon}} for output done directly to standard output, to be grabbed later through specific agents, splunk, and so on.
-	\item custom hand-rolled solutions, generally using ETS tables and processes periodically dumping the data.\footnote{Common patterns may fit the \otpapp{ectr} application, at \href{https://github.com/heroku/ectr}{https://github.com/heroku/ectr}}
-	\item or if you have nothing and are in trouble, a function printing stuff in a loop in a shell\footnote{The \otpapp{recon} application has the function \function{\href{http://ferd.github.io/recon/recon.html\#node\_stats\_print-2}{recon:node\_stats\_print/2}} to do this if you're in a pinch}.
+%	\item \otpapp{folsom}\footnote{\href{https://github.com/boundary/folsom}{https://github.com/boundary/folsom}} to store metrics in memory within the VM, whether global or app-specific..
+	\item \otpapp{folsom}\footnote{\href{https://github.com/boundary/folsom}{https://github.com/boundary/folsom}} сохраняет метрики в памяти внутри виртуальной машины, как глобальные так и для конкретных приложений.
+%	\item \otpapp{vmstats}\footnote{\href{https://github.com/ferd/vmstats}{https://github.com/ferd/vmstats}} and \otpapp{statsderl}\footnote{\href{https://github.com/lpgauth/statsderl}{https://github.com/lpgauth/statsderl}}, sending node metrics over to graphite through \app{statsd}\footnote{\href{https://github.com/etsy/statsd/}{https://github.com/etsy/statsd/}}.
+	\item \otpapp{vmstats}\footnote{\href{https://github.com/ferd/vmstats}{https://github.com/ferd/vmstats}} и \otpapp{statsderl}\footnote{\href{https://github.com/lpgauth/statsderl}{https://github.com/lpgauth/statsderl}}, отправляет метрики узла на сервис graphite посредством \app{statsd}\footnote{\href{https://github.com/etsy/statsd/}{https://github.com/etsy/statsd/}}.
+%	\item \otpapp{exometer}\footnote{\href{https://github.com/Feuerlabs/exometer}{https://github.com/Feuerlabs/exometer}}, a fancy-pants metrics system that can integrate with \otpapp{folsom} (among other things),  and a variety of back-ends (graphite, collectd, \app{statsd}, Riak, SNMP, etc.). It's the newest player in town
+	\item \otpapp{exometer}\footnote{\href{https://github.com/Feuerlabs/exometer}{https://github.com/Feuerlabs/exometer}}, хорошо выглядящая система метрик, которая может интегрироваться с \otpapp{folsom} (и другими), и рядом серверных модулей (graphite, collectd, \app{statsd}, Riak, SNMP, и т.д.). Один из новейших проектов на рынке.
+%	\item \otpapp{ehmon}\footnote{\href{https://github.com/heroku/ehmon}{https://github.com/heroku/ehmon}} for output done directly to standard output, to be grabbed later through specific agents, splunk, and so on.
+	\item \otpapp{ehmon}\footnote{\href{https://github.com/heroku/ehmon}{https://github.com/heroku/ehmon}} для сбора вывода, идущего на стандартный вывод, который потом можно собрать другими специальными программами, например splunk и так далее.
+%	\item custom hand-rolled solutions, generally using ETS tables and processes periodically dumping the data.\footnote{Common patterns may fit the \otpapp{ectr} application, at \href{https://github.com/heroku/ectr}{https://github.com/heroku/ectr}}
+	\item Различные самодельные решения, в основном использующие таблицы ETS и процессы, которые периодически сохраняют данные на диск.\footnote{Общие шаблоны использования их могут совпадать с приложением \otpapp{ectr}, которое находится здесь \href{https://github.com/heroku/ectr}{https://github.com/heroku/ectr}}
+%	\item or if you have nothing and are in trouble, a function printing stuff in a loop in a shell\footnote{The \otpapp{recon} application has the function \function{\href{http://ferd.github.io/recon/recon.html\#node\_stats\_print-2}{recon:node\_stats\_print/2}} to do this if you're in a pinch}.
+	\item Если у вас ничего нет, а проблемы уже начались, то функция, печатающая данные в цикле\footnote{Приложение \otpapp{recon} имеет функцию \function{\href{http://ferd.github.io/recon/recon.html\#node\_stats\_print-2}{recon:node\_stats\_print/2}}.} поможет в трудную минуту.
 \end{itemize*}
 
-It is generally a good idea to explore them a bit, pick one, and get a persistence layer that will let you look through your metrics over time.
+%It is generally a good idea to explore them a bit, pick one, and get a persistence layer that will let you look through your metrics over time.
+В целом является хорошей идеей посвятить немного времени изучению этих инструментов, выбрать один и настроить хранение данных так, чтобы можно было изучать метрики, собранные за долгое время.
 
-\subsection{Memory}
 
-The memory reported by the Erlang VM in most tools will be a variant of what is reported by \expression{erlang:memory()}:
+\subsection{Память}
+
+%The memory reported by the Erlang VM in most tools will be a variant of what is reported by \expression{erlang:memory()}:
+Расход памяти в виртуальной машине Erlang, показанный в большинстве инструментов, будет результатом вызова одного из вариантов команды \expression{erlang:memory()}:
 
 \begin{VerbatimEshell}
 1> erlang:memory().
@@ -1390,43 +1436,61 @@ The memory reported by the Erlang VM in most tools will be a variant of what is 
  {ets,305920}]
 \end{VerbatimEshell}
 
-This requires some explaining.
+%This requires some explaining.
+Это требует некоторых пояснений.
 
-First of all, all the values returned are in bytes, and they represent memory \emph{allocated} (memory actively used by the Erlang VM, not the memory set aside by the operating system for the Erlang VM). It will sooner or later look much smaller than what the operating system reports.
+%First of all, all the values returned are in bytes, and they represent memory \emph{allocated} (memory actively used by the Erlang VM, not the memory set aside by the operating system for the Erlang VM). It will sooner or later look much smaller than what the operating system reports.
+Первым делом все значения, которые возвращаются, измеряются в байтах и представляют \emph{выделенную} память (память, активно используемую виртуальной машиной, а не зарезервированную операционной системой для виртуальной машины). Рано или поздно эти цифры начнут расходиться с информацией от операционной системы и будут выглядеть меньше.
 
-The \expression{total} field contains the sum of the memory used for \expression{processes} and \expression{system} (which is incomplete, unless the VM is instrumented!). \expression{processes} is the memory used by Erlang processes, their stacks and heaps. \expression{system} is the rest: memory used by ETS tables, atoms in the VM, refc binaries\footnote{See Section \ref{sec:binaries}}, and some of the hidden data I mentioned was missing.
+%The \expression{total} field contains the sum of the memory used for \expression{processes} and \expression{system} (which is incomplete, unless the VM is instrumented!). \expression{processes} is the memory used by Erlang processes, their stacks and heaps. \expression{system} is the rest: memory used by ETS tables, atoms in the VM, refc binaries\footnote{See Section \ref{sec:binaries}}, and some of the hidden data I mentioned was missing.
+Поле \expression{total} содержит сумму памяти, которая использована для процессов (\expression{processes}) и системы (\expression{system}). Информация о памяти в системе неполная, если виртуальная машина не скомпилирована с особыми параметрами инструментации. Поле \expression{processes} --- это память, используемая Erlang-процессами, их стеками и кучами. Поле \expression{system} --- всё остальное: память ETS-таблиц, атомов в виртуальной машине, большие двоичные данные\footnote{Смотрите секцию \NamedRef{sec:binaries}}, и некоторые скрытые данные, которые, как я упоминал, могут приводить к несовпадению цифр.
 
-If you want the total amount of memory owned by the virtual machine, as in the amount that will trip system limits (\app{ulimit}), this value is more difficult to get from within the VM. If you want the data without calling \app{top} or \app{htop}, you have to dig down into the VM's memory allocators to find things out.\footnote{See Section \ref{subsec:erlang-memory-model}}
+%If you want the total amount of memory owned by the virtual machine, as in the amount that will trip system limits (\app{ulimit}), this value is more difficult to get from within the VM. If you want the data without calling \app{top} or \app{htop}, you have to dig down into the VM's memory allocators to find things out.\footnote{See Section \ref{subsec:erlang-memory-model}}
+Если вам нужно общее количество памяти, которой владеет виртуальная машина, то число, которое может упереться в системный лимит (\app{ulimit}), это значение получить изнутри виртуальной машины немного сложнее. Если вам нужны данные без вызова внешней программы \app{top} или \app{htop}, вам придётся заглянуть внутрь аллокаторов памяти виртуальной машины.\footnote{Смотрите секцию \NamedRef{subsec:erlang-memory-model}.}
 
-Fortunately, recon has the function \function{recon\_alloc:memory/1} to figure it out, where the argument is:
+%Fortunately, recon has the function \function{recon\_alloc:memory/1} to figure it out, where the argument is:
+К счастью recon имеет функцию \function{recon\_alloc:memory/1}, которая выясняет ответ на этот вопрос, и аргумент функции может быть одним из следующих значений:
 
 \begin{itemize*}
-	\item \expression{used} reports the memory that is actively used for allocated Erlang data;
-   	\item \expression{allocated} reports the memory that is reserved by the VM. It includes the memory used, but also the memory yet-to-be-used but still given by the OS. This is the amount you want if you're dealing with \app{ulimit} and OS-reported values.
-	\item \expression{unused} reports the amount of memory reserved by the VM that is not being allocated. Equivalent to \expression{allocated - used}.
-	\item \expression{usage} returns a percentage (0.0 .. 1.0) of used over allocated memory ratios.
+%	\item \expression{used} reports the memory that is actively used for allocated Erlang data;
+	\item \expression{used} сообщает о памяти, активно используемой для выделенных в Erlang данных.
+%   	\item \expression{allocated} reports the memory that is reserved by the VM. It includes the memory used, but also the memory yet-to-be-used but still given by the OS. This is the amount you want if you're dealing with \app{ulimit} and OS-reported values.
+	\item \expression{allocated} сообщает о зарезервированной в виртуальной машине памяти. Это включает использованную память, а также ещё незанятую, но уже выделенную операционной системой. Это то число, которое вам может понадобиться, если ваш узел упирается в системные ограничения, заданные посредством \app{ulimit}.
+%	\item \expression{unused} reports the amount of memory reserved by the VM that is not being allocated. Equivalent to \expression{allocated - used}.
+	\item \expression{unused} сообщает о количестве памяти, которая зарезервирована виртуальной машиной но ещё не выделена. Эквивалент выражения \expression{allocated - used}.
+%	\item \expression{usage} returns a percentage (0.0 .. 1.0) of used over allocated memory ratios.
+	\item \expression{usage} возвращает значение соотношения использованной к выделенной памяти (число от 0 до 1).
 \end{itemize*}
 
-There are additional options available, but you'll likely only need them when investigating memory leaks in chapter \ref{chap:memory-leaks}
+%There are additional options available, but you'll likely only need them when investigating memory leaks in chapter \NamedRef{chap:memory-leaks}
+Есть и другие опции, но вероятно вам они понадобятся лишь при чтении главы \NamedRef{chap:memory-leaks}.
 
-\subsection{CPU}
+\subsection{Утилизация процессора}
 \label{subsec:global-cpu}
 
-Unfortunately for Erlang developers, CPU is very hard to profile. There are a few reasons for this:
+%Unfortunately for Erlang developers, CPU is very hard to profile. There are a few reasons for this:
+К несчастью для Erlang-программистов, расход процессорного времени оценивать очень сложно. Этому есть ряд причин:
 
 \begin{itemize*}
-	\item The VM does a lot of work unrelated to processes when it comes to scheduling — high scheduling work and high amounts of work done by the Erlang processes are hard to characterize.
-	\item The VM internally uses a model based on \emph{reductions}, which represent an arbitrary number of work actions. Every function call, including BIFs, will increment a process reduction counter. After a given number of reductions, the process gets descheduled.
-	\item To avoid going to sleep when work is low, the threads that control the Erlang schedulers will do busy looping. This ensures the lowest latency possible for sudden load spikes. The VM flag \command{+sbwt none|very\_short|short|medium|long|very\_long} can be used to change this value.
+%	\item The VM does a lot of work unrelated to processes when it comes to scheduling — high scheduling work and high amounts of work done by the Erlang processes are hard to characterize.
+	\item Виртуальная машина выполняет много задач, не связанных с процессами, когда дело касается планировки задач --- большие расходы на планировку и расходы процессов на выполнение их работы трудно охарактеризовать.
+%	\item The VM internally uses a model based on \emph{reductions}, which represent an arbitrary number of work actions. Every function call, including BIFs, will increment a process reduction counter. After a given number of reductions, the process gets descheduled.
+	\item Виртуальная машина внутри использует модель редукций (уменьшений счётчика, или \emph{reductions}), который представляет некоторое число некоторых действий. Каждый вызов функций, включая встроенные функции, изменяет этот счётчик. После заданного числа редукций процесс прекращает исполняться и планировщик передаёт управление следующему в очереди.
+%	\item To avoid going to sleep when work is low, the threads that control the Erlang schedulers will do busy looping. This ensures the lowest latency possible for sudden load spikes. The VM flag \command{+sbwt none|very\_short|short|medium|long|very\_long} can be used to change this value.
+	\item Чтобы избежать засыпания, когда работы недостаточно, потоки, которые контролируют планировщики задач Erlang, занимают себя пустыми циклами. Это гарантирует наилучшую возможную скорость ответа при внезапном всплеске нагрузки. Флаг виртуальной машины \command{+sbwt none|very\_short|short|medium|long|very\_long} может изменить это значение при старте.
 \end{itemize*}
 
-These factors combine to make it fairly hard to find a good absolute measure of how busy your CPU is actually running Erlang code. It will be common for Erlang nodes in production to do a moderate amount of work and use a lot of CPU, but to actually fit a lot of work in the remaining place when the workload gets higher.
+%These factors combine to make it fairly hard to find a good absolute measure of how busy your CPU is actually running Erlang code. It will be common for Erlang nodes in production to do a moderate amount of work and use a lot of CPU, but to actually fit a lot of work in the remaining place when the workload gets higher.
+Эти факторы сочетаются и делают сложной задачей поиск абсолютной меры того, насколько ваш центральный процессор занят выполнением Erlang-кода. Обычным делом является ситуация, когда Erlang-узлы на производстве делают умеренное количество работы и используют ощутимо много процессорного времени, но способны выполнить много новой работы, используя оставшуюся свободную ёмкость, при возрастании нагрузки.
 
-The most accurate representation for this data is the scheduler wall time. It's an optional metric that needs to be turned on by hand on a node, and polled at regular intervals. It will reveal the time percentage a scheduler has been running processes and normal Erlang code, NIFs, BIFs, garbage collection, and so on, versus the amount of time it has spent idling or trying to schedule processes.
+%The most accurate representation for this data is the scheduler wall time. It's an optional metric that needs to be turned on by hand on a node, and polled at regular intervals. It will reveal the time percentage a scheduler has been running processes and normal Erlang code, NIFs, BIFs, garbage collection, and so on, versus the amount of time it has spent idling or trying to schedule processes.
+Самым точным представлением таких данных является время <<настенных часов>> (\emph{wall}) планировщика. Это необязательная метрика, которую следует включить на узле вручную и опрашивать с некоторой периодичностью. Она покажет отношение времени, в течение которого планировщик выполняет процессы и обычный Erlang-код, встроенные функции (NIF, BIF), сборку мусора и так далее к времени, потраченному на пустые циклы ожидания или попытки выбрать новый процесс для запуска.
 
-The value here represents \emph{scheduler utilization} rather than CPU utilization. The higher the ratio, the higher the workload.
+%The value here represents \emph{scheduler utilization} rather than CPU utilization. The higher the ratio, the higher the workload.
+Это значение представляет скорее \emph{занятость планировщика}, чем занятость центрального процессора. Чем выше это соотношение, тем больше занят планировщик.
 
-While the basic usage is explained in the Erlang/OTP reference manual\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}}, the value can be obtained by calling recon:
+%While the basic usage is explained in the Erlang/OTP reference manual\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}}, the value can be obtained by calling recon:
+В то время, как базовый способ употребления разъясняется в документации по Erlang/OTP\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}{http://www.erlang.org/doc/man/erlang.html\#statistics\_scheduler\_wall\_time}}, эти числа можно получить, вызывая библиотеку recon:
 
 \begin{VerbatimEshell}
 1> recon:scheduler_usage(1000).
@@ -1436,7 +1500,8 @@ While the basic usage is explained in the Erlang/OTP reference manual\footnote{\
  {4,1.2087551402238991e-5}]
 \end{VerbatimEshell}
 
-The function \function{recon:scheduler\_usage(N)} will poll for \var{N} milliseconds (here, 1 second) and output the value of each scheduler. In this case, the VM has two very loaded schedulers (at 99.2\% and 93.7\% repectively), and two mostly unused ones at far below 1\%. Yet, a tool like \app{htop} would report something closer to this for each core:
+%The function \function{recon:scheduler\_usage(N)} will poll for \var{N} milliseconds (here, 1 second) and output the value of each scheduler. In this case, the VM has two very loaded schedulers (at 99.2\% and 93.7\% repectively), and two mostly unused ones at far below 1\%. Yet, a tool like \app{htop} would report something closer to this for each core:
+Функция \function{recon:scheduler\_usage(N)} будет опрашивать в течение \var{N} миллисекунд (в данном случае 1 секунды) и выведет значение для каждого планировщика. В этом случае виртуальная машина имеет два очень нагруженных планировщика (занятых на уровне 99.2\% и 93.7\% соответственно) и два в основном свободных, с утилизацией сильно меньше 1\%. Однако инструмент операционной системы, такой как \app{htop} сообщит нам другие цифры:
 
 \begin{VerbatimText}
 [|||||||||||||||||||||||||     70.4%]
@@ -1445,36 +1510,45 @@ The function \function{recon:scheduler\_usage(N)} will poll for \var{N} millisec
 [||||||||||||||||              40.2%]
 \end{VerbatimText}
 
-The result being that there is a decent chunk of CPU usage that would be mostly free for scheduling actual Erlang work (assuming the schedulers are busy waiting more than trying to select tasks to run), but is being reported as busy by the OS.
+%The result being that there is a decent chunk of CPU usage that would be mostly free for scheduling actual Erlang work (assuming the schedulers are busy waiting more than trying to select tasks to run), but is being reported as busy by the OS.
+Причина такого результата в том, что некоторая часть <<использованного>> процессорного времени на самом деле доступна для выполнения работы на Erlang (предполагается, что некоторые планировщики заняты пустым ожиданием, а не выбором очередной задачи для запуска), но операционная система видит это как нагрузку.
 
-Another interesting behaviour possible is that the scheduler usage may show a higher rate (1.0) than what the OS will report. Schedulers waiting for os resources are considered utilized as they cannot handle more work. If the OS itself is holding up on non-CPU tasks it is still possible for Erlang's schedulers not to be able to do more work and report a full ratio.
+%Another interesting behaviour possible is that the scheduler usage may show a higher rate (1.0) than what the OS will report. Schedulers waiting for os resources are considered utilized as they cannot handle more work. If the OS itself is holding up on non-CPU tasks it is still possible for Erlang's schedulers not to be able to do more work and report a full ratio.
+Возможно и другое интересное поведение, когда утилизация планировщика может показать значение выше, чем сообщила операционная система. Планировщики, ждущие некоторого ресурса ОС считаются занятыми, поскольку они не в состоянии обработать новые задачи. Если сама ОС блокирует некторые не связанные с процессором задачи, то вполне возможна ситуация, когда планировщики Erlang не могут выполнить больше работы и сообщают о полной загрузке.
 
-These behaviours may especially be important to consider when doing capacity planning, and can be better indicators of headroom than looking at CPU usage or load.
+%These behaviours may especially be important to consider when doing capacity planning, and can be better indicators of headroom than looking at CPU usage or load.
+Эти шаблоны поведения могут вам пригодиться при планировании ёмкости вашей системы и могут быть более хорошими индикаторами запаса <<свободного места над головой>>, чем взгляд на загрузку или использование процессора.
 
 %% 08:37 #erlounge: <+garazdawi> MononcQc: There is a cost when not doing work. The way it works is that when starting/stopping to do work it checks the time, but if the
 %%                              scheduler has something to do the entire time then there is no overhead. So you might see a slight cpu increase if the schedulers run out of
 %%                              work often, but it will (should) not affect the maximum possible throughput of the system.
 
-\subsection{Processes}
+\subsection{Процессы}
 \label{subsec:global-procs}
 
-Trying to get a global view of processes is helpful when trying to assess how much work is being done in the VM in terms of \emph{tasks}. A general good practice in Erlang is to use processes for truly concurrent activities — on web servers, you will usually get one process per request or connection, and on stateful systems, you may add one process per-user — and therefore the number of processes on a node can be used as a metric for load.
+%Trying to get a global view of processes is helpful when trying to assess how much work is being done in the VM in terms of \emph{tasks}. A general good practice in Erlang is to use processes for truly concurrent activities — on web servers, you will usually get one process per request or connection, and on stateful systems, you may add one process per-user — and therefore the number of processes on a node can be used as a metric for load.
+Попытка получить общий вид всех процессов может оказаться полезной, когда вы пытаетесь оценить, сколько работы выполняется виртуальной машиной с точки зрения \emph{задач}. Обычной хорошей практикой в Erlang является использование процессов для истинно параллельных действий --- на веб-серверах, вы обычно можете использовать один процесс на каждый запрос или каждое подключение, на системах с полноценным состоянием, вы могли бы использовать один процесс на пользователя --- и таким образом число процессов на узле может быть метрикой текущей загрузки.
 
-Most tools mentioned in section \ref{sec:global-view} will track them in one way or another, but if the process count needs to be done manually, calling the following expression is enough:
+%Most tools mentioned in section \NamedRef{sec:global-view} will track them in one way or another, but if the process count needs to be done manually, calling the following expression is enough:
+Большая часть инструментов, упомянутых в секции \NamedRef{sec:global-view}, будут отслеживать их так или иначе, но если вам нужно получить только их количество, то такого выражения будет достаточно:
 
 \begin{VerbatimEshell}
 1> length(processes()).
 56535
 \end{VerbatimEshell}
 
-Tracking this value over time can be extremely helpful to try and characterize load or detect process leaks, along with other metrics you may have around.
+%Tracking this value over time can be extremely helpful to try and characterize load or detect process leaks, along with other metrics you may have around.
+Сохранение истории этого значения в виде например, графика, может оказаться полезным чтобы попытаться охарактеризовать нагрузку или выявить утечку процессов с помощью этой и других метрик, которые будут у вас под руками.
 
-\subsection{Ports}
+
+\subsection{Порты}
 \label{subsec:global-ports}
 
-In a manner similar to processes, \emph{Ports} should be considered. Ports are a datatype that encompasses all kinds of connections and sockets opened to the outside world: TCP sockets, UDP sockets, SCTP sockets, file descriptors, and so on.
+%In a manner similar to processes, \emph{Ports} should be considered. Ports are a datatype that encompasses all kinds of connections and sockets opened to the outside world: TCP sockets, UDP sockets, SCTP sockets, file descriptors, and so on.
+Подобно процессам, следует обратить внимание и на \emph{порты}. Порты являются типом данных, которым представлены все виды подключений и сокетов, открытых во внешний мир: TCP-сокеты, UDP-сокеты, SCTP-сокеты, дескрипторы открытых файлов и так далее.
 
-There is a general function (again, similar to processes) to count them: \expression{length(erlang:ports())}. However, this function merges in all types of ports into a single entity. Instead, one can use \otpapp{recon} to get them sorted by type:
+%There is a general function (again, similar to processes) to count them: \expression{length(erlang:ports())}. However, this function merges in all types of ports into a single entity. Instead, one can use \otpapp{recon} to get them sorted by type:
+Имеется общая функция (снова-таки подобно процессам), которая их пересчитает: \expression{length(erlang:ports())}. Однако, эта функция соединяет порты всех типов в один список. Вместо этого можно использовать \otpapp{recon} для того, чтобы разобрать порты по типам:
 
 \begin{VerbatimEshell}
 1> recon:port_types().
@@ -1486,94 +1560,131 @@ There is a general function (again, similar to processes) to count them: \expres
  {"inet_gethost 4 ",1}]
  \end{VerbatimEshell}
 
-This list contains the types and the count for each type of port. The type name is a string and is defined by the Erlang VM itself.
+%This list contains the types and the count for each type of port. The type name is a string and is defined by the Erlang VM itself.
+Этот список содержит виды и количество портов каждого вида. Имя типа --- строка, и её содержимое определяет сама виртуальная машина.
 
-All the \expression{*\_inet} ports are usually sockets, where the prefix is the protocol used (TCP, UDP, SCTP). The \expression{efile} type is for files, while \expression{"0/1"} and \expression{"2/2"} are file descriptors for standard I/O channels (\emph{stdin} and \emph{stdout}) and standard error channels (\emph{stderr}), respectively.
+%All the \expression{*\_inet} ports are usually sockets, where the prefix is the protocol used (TCP, UDP, SCTP). The \expression{efile} type is for files, while \expression{"0/1"} and \expression{"2/2"} are file descriptors for standard I/O channels (\emph{stdin} and \emph{stdout}) and standard error channels (\emph{stderr}), respectively.
+Все порты типа \expression{*\_inet} обычно являются сокетами, где приставка указывает на протокол (TCP, UDP, SCTP). Тип \expression{efile} относится к файлам, а \expression{"0/1"} и \expression{"2/2"} --- файловые дескрипторы стандартных каналов ввода-вывода (пара \emph{stdin} и \emph{stdout}) и \emph{stderr} соответственно.
 
-Most other types will be given names of the driver they're talking to, and will be examples of \emph{port programs}\footnote{\href{http://www.erlang.org/doc/tutorial/c\_port.html}{http://www.erlang.org/doc/tutorial/c\_port.html}} or \emph{port drivers}\footnote{\href{http://www.erlang.org/doc/tutorial/c\_portdriver.html}{http://www.erlang.org/doc/tutorial/c\_portdriver.html}}.
+%Most other types will be given names of the driver they're talking to, and will be examples of \emph{port programs}\footnote{\href{http://www.erlang.org/doc/tutorial/c\_port.html}{http://www.erlang.org/doc/tutorial/c\_port.html}} or \emph{port drivers}\footnote{\href{http://www.erlang.org/doc/tutorial/c\_portdriver.html}{http://www.erlang.org/doc/tutorial/c\_portdriver.html}}.
+Большинство других типов получат имена согласно драйверу, который с ними работает, и будут являться примерами \emph{программ, работающих с портами}\footnote{Урок по портам: \href{http://www.erlang.org/doc/tutorial/c\_port.html}{http://www.erlang.org/doc/tutorial/c\_port.html}} или \emph{драйверов портов}\footnote{Урок по драйверам: \href{http://www.erlang.org/doc/tutorial/c\_portdriver.html}{http://www.erlang.org/doc/tutorial/c\_portdriver.html}}.
 
-Again, tracking these can be useful to assess load or usage of a system, detect leaks, and so on.
+%Again, tracking these can be useful to assess load or usage of a system, detect leaks, and so on.
+Снова-таки отслеживание этих ресурсов может пригодиться для оценки загрузки или использования системы, поиска утечек и так далее.
 
-\section{Digging In}
+
+%\section{Digging In}
+\section{Копаем поглубже}
 \label{sec:digging-in}
 
-Whenever some 'in the large' view (or logging, maybe) has pointed you towards a potential cause for an issue you're having, it starts being interesting to dig around with a purpose. Is a process in a weird state? Maybe it needs tracing\footnote{See Chapter \ref{chap:tracing}}! Tracing is great whenever you have a specific function call or input or output to watch for, but often, before getting there, a lot more digging is required.
+%Whenever some 'in the large' view (or logging, maybe) has pointed you towards a potential cause for an issue you're having, it starts being interesting to dig around with a purpose. Is a process in a weird state? Maybe it needs tracing\footnote{See Chapter \NamedRef{chap:tracing}}! Tracing is great whenever you have a specific function call or input or output to watch for, but often, before getting there, a lot more digging is required.
+Когда что-то в <<виде сверху>> (или в ваших файлах журналов, возможно) указало в направлении потенциальной причины имеющейся проблемы, появляется интерес копать в поисках уже с конкретной целью. Находится ли процесс в странном состоянии? Может быть, ему поможет трассировка\footnote{Смотрите главу \NamedRef{chap:tracing}}! Трассировка --- это прекрасный инструмент, когда у вас имеется некоторый вызов функции или входные или выходные данные, за полётом которых надо проследить, но часто перед тем, как они приведут нас к проблеме, требуются большие раскопки.
 
-Outside of memory leaks, which often need their own specific techniques and are discussed in Chapter \ref{chap:memory-leaks}, the most common tasks are related to processes, and ports (file descriptors and sockets).
+%Outside of memory leaks, which often need their own specific techniques and are discussed in Chapter \NamedRef{chap:memory-leaks}, the most common tasks are related to processes, and ports (file descriptors and sockets).
+За пределами утечек памяти, для которых нужны свой особенный подход, и которые обсуждаются в главе \NamedRef{chap:memory-leaks}, чаще всего попадаются задачи, которые относятся к процессам и портам (файловым дескрипторам и сокетам).
 
-\subsection{Processes}
+
+\subsection{Копаем в процессы}
 \label{subsec:digging-procs}
 
-By all means, processes are an important part of a running Erlang system. And because they're so central to everything that goes on, there's a lot to want to know about them. Fortunately, the VM makes a lot of information available, some of which is safe to use, and some of which is unsafe to use in production (because they can return data sets large enough that the amount of memory copied to the shell process and used to print it can kill the node).
+%By all means, processes are an important part of a running Erlang system. And because they're so central to everything that goes on, there's a lot to want to know about them. Fortunately, the VM makes a lot of information available, some of which is safe to use, and some of which is unsafe to use in production (because they can return data sets large enough that the amount of memory copied to the shell process and used to print it can kill the node).
+Со всех сторон процессы являются важной частью работающей Erlang-системы. И поскольку они такие важные для всего, есть множество причин желать узнать о них побольше. К счастью виртуальная машина даёт очень много информации, часть из которой безопасна, и ещё часть опасна для использования на производственном сервере (поскольку возвращаемые объёмы данных могут оказаться настолько большими, что копирование их в процесс интерактивного интерпретатора и попытка распечатать на экране могут убить узел).
 
-All the values can be obtained by calling \expression{process\_info(Pid, Key)} or \newline \expression{process\_info(Pid, [Keys])}\footnote{In cases where processes contain sensitive information, data can be forced to be kept private by calling \expression{process\_flag(sensitive, true)}}. Here are the commonly used keys\footnote{For \emph{all} options, look at \href{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}}:
+%All the values can be obtained by calling \expression{process\_info(Pid, Key)} or \newline \expression{process\_info(Pid, [Keys])}\footnote{In cases where processes contain sensitive information, data can be forced to be kept private by calling \expression{process\_flag(sensitive, true)}}. Here are the commonly used keys\footnote{For \emph{all} options, look at \href{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}}:
+Все значения могут быть получены с помощью функции \expression{process\_info(Pid, Ключ)} или \expression{process\_info(Pid, [СписокКлючей])}\footnote{В тех случаях, когда процессы содержат секретную информацию, данные можно скрыть с помощью вызова \expression{process\_flag(sensitive, true)} --- это ограничит печать содержимого процесса на экран.}. Вот некоторые часто используемые ключи\footnote{Для списка \emph{всех} опций загляните в документацию \href{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}{http://www.erlang.org/doc/man/erlang.html\#process\_info-2}}:
 
 \begin{description*}
-	\item[Meta] \hfill
+	\item[Общие (meta)] \hfill
 		\begin{description}		
-			\item[\expression{dictionary}] returns all the entries in the process dictionary\footnote{See \href{http://www.erlang.org/course/advanced.html\#dict}{http://www.erlang.org/course/advanced.html\#dict} and \href{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}}. Generally safe to use, because people shouldn't be storing gigabytes of arbitrary data in there.
-			
-			\item[\expression{group\_leader}] the group leader of a process defines where IO (files, output of \function{io:format/1-3}) goes.\footnote{See \href{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour}{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour} and \href{http://erlang.org/doc/apps/stdlib/io\_protocol.html}{http://erlang.org/doc/apps/stdlib/io\_protocol.html} for more details.}
-			
-			\item[\expression{registered\_name}] if the process has a name (as registered with \function{erlang:register/2}), it is given here.
-			
-			\item[\expression{status}] the nature of the process as seen by the scheduler. The possible values are:
-				\begin{description*}
-					\item[\expression{exiting}] the process is done, but not fully cleared yet;
-					\item[\expression{waiting}] the process is waiting in a \expression{receive ... end};
-					\item[\expression{running}] self-descriptive;
-					\item[\expression{runnable}] ready to run, but not scheduled yet because another process is running;
-					\item[\expression{garbage\_collecting}] self-descriptive;
-					\item[\expression{suspended}] whenever it is suspended by a BIF, or as a back-pressure mechanism because a socket or port buffer is full. The process only becomes runnable again once the port is no longer busy.
-				\end{description*}
-			
-		\end{description}
-	\item[Signals] \hfill
-		\begin{description}
-			\item[\expression{links}] will show a list of all the links a process has towards other processes and also ports (sockets, file descriptors). Generally safe to call, but to be used with care on large supervisors that may return thousands and thousands of entries.
-			
-			\item[\expression{monitored\_by}] gives a list of processes that are monitoring the current process (through the use of \function{erlang:monitor/2}).
-			
-			\item[\expression{monitors}] kind of the opposite of \expression{monitored\_by}; it gives a list of all the processes being monitored by the one polled here.
-					
-			\item[\expression{trap\_exit}] has the value \expression{true} if the process is trapping exits, \expression{false} otherwise.
-		\end{description}		
+%	\item[\expression{dictionary}] returns all the entries in the process dictionary\footnote{See \href{http://www.erlang.org/course/advanced.html\#dict}{http://www.erlang.org/course/advanced.html\#dict} and \href{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}}. Generally safe to use, because people shouldn't be storing gigabytes of arbitrary data in there.
+	\item[\expression{dictionary}] возвратит все записи в словаре процесса\footnote{Смотрите \href{http://www.erlang.org/course/advanced.html\#dict}{http://www.erlang.org/course/advanced.html\#dict} и \href{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}{http://ferd.ca/on-the-use-of-the-process-dictionary-in-erlang.html}}. Обычно можно спокойно использовать, поскольку людям не следует сохранять гигабайты данных в этом хранилище.
 		
-	\item[Location] \hfill
-		\begin{description}
-			\item[\expression{current\_function}] displays the current running function, as a tuple of the form \expression{\{Mod, Fun, Arity\}}.
+%	\item[\expression{group\_leader}] the group leader of a process defines where IO (files, output of \function{io:format/1-3}) goes.\footnote{See \href{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour}{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour} and \href{http://erlang.org/doc/apps/stdlib/io\_protocol.html}{http://erlang.org/doc/apps/stdlib/io\_protocol.html} for more details.}
+	\item[\expression{group\_leader}] --- лидер группы процесса определяет, куда направляется ввод и вывод (файлы, печать на экран функцией \function{io:format/1-3})\footnote{Для подробного описания смотрите книгу \href{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour}{http://learnyousomeerlang.com/building-otp-applications\#the-application-behaviour} и \href{http://erlang.org/doc/apps/stdlib/io\_protocol.html}{http://erlang.org/doc/apps/stdlib/io\_protocol.html}.}
+			
+%	\item[\expression{registered\_name}] if the process has a name (as registered with \function{erlang:register/2}), it is given here.
+	\item[\expression{registered\_name}] если процесс имеет имя (зарегистрированное, например, вызовом \function{erlang:register/2}), оно будет здесь.
+			
+%	\item[\expression{status}] the nature of the process as seen by the scheduler. The possible values are:
+		\begin{description*}
+%			\item[\expression{exiting}] the process is done, but not fully cleared yet;
+			\item[\expression{exiting}] процесс завершил работу но ещё не закончил очистку;
+%			\item[\expression{waiting}] the process is waiting in a \expression{receive ... end};
+			\item[\expression{waiting}] процесс ждёт в операторе \expression{receive ... end};
+%			\item[\expression{running}] self-descriptive;
+			\item[\expression{running}] очевидно из названия, процесс выполняется в данный момент;
+%			\item[\expression{runnable}] ready to run, but not scheduled yet because another process is running;
+			\item[\expression{runnable}] готов выполняться, но пока не получил процессорного времени, потому что другой процесс выполняется в данный момент;
+%			\item[\expression{garbage\_collecting}] self-descriptive;
+			\item[\expression{garbage\_collecting}] выполняется сборка мусора;
+%			\item[\expression{suspended}] whenever it is suspended by a BIF, or as a back-pressure mechanism because a socket or port buffer is full. The process only becomes runnable again once the port is no longer busy.
+			\item[\expression{suspended}] процесс заморожен встроенной (BIF) функцией или механизмом обратного давления сокета или драйвера порта, поскольку их буфер переполнен. Процесс сможет стать исполняемым снова, когда порт освободится для продолжения работы.
+		\end{description*}
+	\end{description}
 
-			\item[\expression{current\_location}] displays the current location within a module, as a tuple of the form \expression{\{Mod, Fun, Arity, [\{File, FileName\}, \{line, Num\}]\}}.
-			
-			\item[\expression{current\_stacktrace}] more verbose form of the preceding option; displays the current stacktrace as a list of 'current locations'.
-			
-			\item[\expression{initial\_call}] shows the function that the process was running when spawned, of the form \expression{\{Mod, Fun, Arity\}}. This may help identify what the process was spawned as, rather than what it's running right now.
-			
-		\end{description}
-	\item[Memory Used] \hfill
+	\item[Сигналы (signals)] \hfill
+	\begin{description}
+%		\item[\expression{links}] will show a list of all the links a process has towards other processes and also ports (sockets, file descriptors). Generally safe to call, but to be used with care on large supervisors that may return thousands and thousands of entries.
+		\item[\expression{links}] покажет список всех связей, которые соединяют его с другими процессами и также портами (сокетами и дескрипторами файлов). Обычно является безопасной функцией, но будьте осторожны, поскольку на больших наблюдателях эта функция может вернуть многие тысячи элементов.
+		
+%		\item[\expression{monitored\_by}] gives a list of processes that are monitoring the current process (through the use of \function{erlang:monitor/2}).
+		\item[\expression{monitored\_by}] даст список процессов, которые производят мониторинг текущего процесса (с помощью функции  \function{erlang:monitor/2}).
+		
+%		\item[\expression{monitors}] kind of the opposite of \expression{monitored\_by}; it gives a list of all the processes being monitored by the one polled here.
+		\item[\expression{monitors}] опция, противоположная предыдущей  (\expression{monitored\_by}), которая даёт список всех процессов, мониторинг которых производит текущий процесс.
+				
+%		\item[\expression{trap\_exit}] has the value \expression{true} if the process is trapping exits, \expression{false} otherwise.
+		\item[\expression{trap\_exit}] будет иметь значение \expression{true}, если процесс перехватывает сигналы выхода и превращает их в сообщения, иначе \expression{false}.
+	\end{description}		
+		
+	\item[Местонахождение (location)] \hfill
 		\begin{description}
-			\item[\expression{binary}] Displays the all the references to refc binaries\footnote{See Section \ref{sec:binaries}} along with their size. Can be unsafe to use if a process has a lot of them allocated.
+%	\item[\expression{current\_function}] displays the current running function, as a tuple of the form \expression{\{Mod, Fun, Arity\}}.
+	\item[\expression{current\_function}] выведет текущую исполняемую функцию, в виде кортежа \expression{\{Модуль, ИмяФункции, Арность\}}.
+
+%	\item[\expression{current\_location}] displays the current location within a module, as a tuple of the form \expression{\{Mod, Fun, Arity, [\{File, FileName\}, \{line, Num\}]\}}.
+	\item[\expression{current\_location}] покажет текущее положение внутри модуля, в виде кортежа \expression{\{Модуль, Функция, Арность, [\{file, ИмяФайла\}, \{line, Строка\}]\}}.
 			
-			\item[\expression{garbage\_collection}] contains information regarding garbage collection in the process. The content is documented as 'subject to change' and should be treated as such. The information tends to contains entries such as the number of garbage collections the process has went through, options for full-sweep garbage collections, and heap sizes.
+%	\item[\expression{current\_stacktrace}] more verbose form of the preceding option; displays the current stacktrace as a list of 'current locations'.
+	\item[\expression{current\_stacktrace}] более многословный вариант предыдущей опции, который покажет текущий стек вызовов в виде списка <<текущих положений>>.
 			
-			\item[\expression{heap\_size}] A typical Erlang process contains an 'old' heap and a 'new' heap, and goes through generational garbage collection. This entry shows the process' heap size for the newest generation, and it usually includes the stack size. The value returned is in \emph{words}.
-			
-			\item[\expression{memory}] Returns, in \emph{bytes}, the size of the process, including the call stack, the heaps, and internal structures used by the VM that are part of a process.
-			
-			\item[\expression{message\_queue\_len}] Tells you how many messages are waiting in the mailbox of a process.
-			
-			\item[\expression{messages}] Returns all of the messages in a process' mailbox. This attribute is \emph{extremely} dangerous to request in production because mailboxes can hold millions of messages if you're debugging a process that managed to get locked up. \emph{Always} call for the \expression{message\_queue\_len} first to make sure it's safe to use.
-			
-			\item[\expression{total\_heap\_size}] Similar to \expression{heap\_size}, but also contains all other fragments of the heap, including the old one. The value returned is in \emph{words}.
-			
-			\end{description}
-	\item[Work] \hfill
-		\begin{description}
-			\item[\expression{reductions}] The Erlang VM does scheduling based on \emph{reductions}, an arbitrary unit of work that allows rather portable implementations of scheduling (time-based scheduling is usually hard to make work efficiently on as many OSes as Erlang runs on). The higher the reductions, the more work, in terms of CPU and function calls, a process is doing. 
-		\end{description}
+%	\item[\expression{initial\_call}] shows the function that the process was running when spawned, of the form \expression{\{Mod, Fun, Arity\}}. This may help identify what the process was spawned as, rather than what it's running right now.
+	\item[\expression{initial\_call}] покажет функцию, с которой начал исполнение процесс при своём порождении, записывается в виде \expression{\{Модуль, Функция, Арность\}}. Это может помочь найти источник, где процесс был порождён, а не только место, где он сейчас исполняется.
+\end{description}
+
+\item[Расход памяти (memory\_used)] \hfill
+	\begin{description}
+%	\item[\expression{binary}] Displays the all the references to refc binaries\footnote{See Section \NamedRef{sec:binaries}} along with their size. Can be unsafe to use if a process has a lot of them allocated.
+	\item[\expression{binary}] выводит все ссылки на блоки двоичных данных, считаемые по количеству ссылок (\emph{refc})\footnote{Смотрите секцию \NamedRef{sec:binaries}} вместе с их размерами. Может оказаться небезопасной функцией, если процесс владеет большим их количеством.
+		
+%	\item[\expression{garbage\_collection}] contains information regarding garbage collection in the process. The content is documented as 'subject to change' and should be treated as such. The information tends to contains entries such as the number of garbage collections the process has went through, options for full-sweep garbage collections, and heap sizes.
+	\item[\expression{garbage\_collection}] содержит информацию относительно сборки мусора в процессе. Содержимое документировано, как <<может быть изменено в будущем>> и не должно расцениваться, как имеющее известную стабильную структуру. Информация содержит записи, такие как число сборок мусора, проведённых для данного процесса, опции для сборок мусора в режиме полных проходов (\emph{full-sweep}), и размеры куч.
+
+%	\item[\expression{heap\_size}] A typical Erlang process contains an 'old' heap and a 'new' heap, and goes through generational garbage collection. This entry shows the process' heap size for the newest generation, and it usually includes the stack size. The value returned is in \emph{words}.
+	\item[\expression{heap\_size}] обычный Erlang-процесс содержит <<старую>> и <<новую>> версии кучи, которые подвергаются сборке мусора по поколениям. Эта запись показывает размер кучи новейшего поколения, и обычно включает в себя размер стека. Возвращаемое значение измеряется в \emph{словах}, а не байтах.
+	
+%	\item[\expression{memory}] Returns, in \emph{bytes}, the size of the process, including the call stack, the heaps, and internal structures used by the VM that are part of a process.
+	\item[\expression{memory}] возвратит, в \emph{байтах}, размер процесса, включая стек, кучи и внутренние структуры, которые использует виртуальная машина и являющиеся частью процесса.
+
+%	\item[\expression{message\_queue\_len}] Tells you how many messages are waiting in the mailbox of a process.
+	\item[\expression{message\_queue\_len}] сообщает, сколько сообщений ждут в почтовом ящике процесса.
+
+%	\item[\expression{messages}] Returns all of the messages in a process' mailbox. This attribute is \emph{extremely} dangerous to request in production because mailboxes can hold millions of messages if you're debugging a process that managed to get locked up. \emph{Always} call for the \expression{message\_queue\_len} first to make sure it's safe to use.
+	\item[\expression{messages}] возвращает все сообщения в почтовом ящике процесса. Эта опция \emph{исключительно опасна} при вызове на производственном сервере, поскольку почтовые ящики могут хранить миллионы сообщений. Если вы отлаживаете процесс, который оказался заблокирован, то \emph{всегда} сначала проверяйте длину почтового ящика  посредством \expression{message\_queue\_len}, чтобы убедиться в безопасности получения всех сообщений.
+
+%	\item[\expression{total\_heap\_size}] Similar to \expression{heap\_size}, but also contains all other fragments of the heap, including the old one. The value returned is in \emph{words}.
+	\item[\expression{total\_heap\_size}] подобно опции \expression{heap\_size}, но также включает в себя все другие фрагменты кучи, включая старое поколение. Возвращаемое значение измеряется в \emph{словах}.
+	\end{description}
+	
+\item[Работа (work)] \hfill
+	\begin{description}
+%	\item[\expression{reductions}] The Erlang VM does scheduling based on \emph{reductions}, an arbitrary unit of work that allows rather portable implementations of scheduling (time-based scheduling is usually hard to make work efficiently on as many OSes as Erlang runs on). The higher the reductions, the more work, in terms of CPU and function calls, a process is doing.
+	\item[\expression{reductions}] виртуальная машина выполняет планирование задач на основании числа \emph{редукций}, некоторой произвольно выбранной единицы работы, которая позволяет переносимые на разные платформы реализации планирования задач (планирование на основании времени обычно трудно заставить работать эффективно на всех операционных системах, где работает Erlang). Чем выше число редукций, тем больше работы на центральном процессоре и вызовов функций выполнил процесс.
+	\end{description}
 \end{description*}
 
-Fortunately, for all the common ones that are also safe, recon contains the \expression{recon:info/1} function to help:
+%Fortunately, for all the common ones that are also safe, recon contains the \expression{recon:info/1} function to help:
+К счастью для всех часто употребляемых опций, которые к тому же безопасны, recon имеет вспомогательную функцию \expression{recon:info/1}:
 
 \begin{VerbatimEshell}
 1> recon:info("<0.12.0>").
@@ -1602,27 +1713,33 @@ Fortunately, for all the common ones that are also safe, recon contains the \exp
  {work,[{reductions,35}]}]
 \end{VerbatimEshell}
 
-For the sake of convenience, \expression{recon:info/1} will accept any pid-like first argument and handle it: literal pids, strings (\expression{"<0.12.0>"}), registered atoms, global names (\expression{\{global, Atom\}}), names registered with a third-party registry (e.g. with \otpapp{gproc}: \expression{\{via, gproc, Name\}}), or tuples (\expression{\{0,12,0\}}). The process just needs to be local to the node you're debugging.
+%For the sake of convenience, \expression{recon:info/1} will accept any pid-like first argument and handle it: literal pids, strings (\expression{"<0.12.0>"}), registered atoms, global names (\expression{\{global, Atom\}}), names registered with a third-party registry (e.g. with \otpapp{gproc}: \expression{\{via, gproc, Name\}}), or tuples (\expression{\{0,12,0\}}). The process just needs to be local to the node you're debugging.
+Для удобства \expression{recon:info/1} примет первым аргументом любое значение, похожее на идентификатор процесса и обработает его: подойдут обычные pid, строки (\expression{"<0.12.0>"}), зарегистрированные атомы, глобальные имена (\expression{\{global, Атом\}}), имена, зарегистрированные в отдельном реестре (например \otpapp{gproc}: \expression{\{via, gproc, Имя\}}), или кортежи в виде (\expression{\{0,12,0\}}). Процесс всего лишь должен находиться локально на узле, который вы сейчас отлаживаете.
 
-If only a category of information is wanted, the category can be used directly:
+%If only a category of information is wanted, the category can be used directly:
+Если требуются все значения в категории, можно использовать её название:
 
 \begin{VerbatimEshell}
 2> recon:info(self(), work).
 {work,[{reductions,11035}]}
 \end{VerbatimEshell}
 
-or can be used in exactly the same way as \function{process\_info/2}:
+%or can be used in exactly the same way as \function{process\_info/2}:
+Можно использовать точно так же, как и стандартную \function{process\_info/2}:
 
 \begin{VerbatimEshell}
 3> recon:info(self(), [memory, status]).
 [{memory,10600},{status,running}]
 \end{VerbatimEshell}
 
-This latter form can be used to fetch unsafe information.
+%This latter form can be used to fetch unsafe information.
+Эта вторая форма может быть использована для получения небезопасной информациию
 
-With all this data, it's possible to find out all we need to debug a system. The challenge then is often to figure out, between this per-process data, and the global one, which process(es) should be targeted.
+%With all this data, it's possible to find out all we need to debug a system. The challenge then is often to figure out, between this per-process data, and the global one, which process(es) should be targeted.
+Со всеми этими данными можно выяснить всё, что нам требуется для отладки системы. Сложнее всего определить, какие процессы потребуют отладки, сравнивая эти данные для каждого процесса и глобальную статистику.
 
-When looking for high memory usage, for example it's interesting to be able to list all of a node's processes and find the top \var{N} consumers. Using the attributes above and the \function{recon:proc\_count(Attribute, N)} function, we can get these results:
+%When looking for high memory usage, for example it's interesting to be able to list all of a node's processes and find the top \var{N} consumers. Using the attributes above and the \function{recon:proc\_count(Attribute, N)} function, we can get these results:
+Глядя на высокий расход памяти, например, интересно было бы получить все процессы данного узла и отобрать \var{N} самых больших потребителей. Используя атрибуты, показанные выше, и функцию \function{recon:proc\_count(Атрибут, N)}, можно получить эти результаты:
 
 \begin{VerbatimEshell}
 4> recon:proc_count(memory, 3).
@@ -1639,25 +1756,33 @@ When looking for high memory usage, for example it's interesting to be able to l
    {initial_call,{erlang,apply,2}}]}]
 \end{VerbatimEshell}
 
-Any of the attributes mentioned earlier can work, and for nodes with long-lived processes that can cause problems, it's a fairly useful function.
+%Any of the attributes mentioned earlier can work, and for nodes with long-lived processes that can cause problems, it's a fairly useful function.
+Любые из атрибутов, упомянутых ранее, могут сработать. Для узлов, на которых выполняются долгоживущие процессы, могущие причинить сложности, эта функция довольно полезна.
 
-There is however a problem when most processes are short-lived, usually too short to inspect through other tools, or when a moving window is what we need (for example, what processes are busy accumulating memory or running code \emph{right now}).
+%There is however a problem when most processes are short-lived, usually too short to inspect through other tools, or when a moving window is what we need (for example, what processes are busy accumulating memory or running code \emph{right now}).
+Однако имеется проблема, когда большинство процессов короткоживущие, обычно слишком короткие, чтобы их можно было рассмотреть другими инструментами, или когда нам требуется скользящий интервал (\emph{moving window}) (например, какие процессы заняты накоплением памяти или выполнением кода \emph{прямо сейчас}).
 
-For this use case, Recon has the \function{recon:proc\_window(Attribute, Num, Milliseconds)} function.
+%For this use case, Recon has the \function{recon:proc\_window(Attribute, Num, Milliseconds)} function.
+На этот случай recon имеет функцию \function{recon:proc\_window(Атрибут, Количество,} \function{Миллисекунды)}.
 
-It is important to see this function as a snapshot over a sliding window. A program's timeline during sampling might look like this:
+%It is important to see this function as a snapshot over a sliding window. A program's timeline during sampling might look like this:
+Важно рассматривать эту функцию как <<снимок>> состояния на скользящем интервале. Время жизни программы во время взятия образцов может выглядеть так:
 
 \begin{Verbatim}
---w---- [Sample1] ---x-------------y----- [Sample2] ---z--->
+--w---- [Образец1] ---x-------------y----- [Образец2] ---z--->
 \end{Verbatim}
 
-The function will take two samples at an interval defined by \var{Milliseconds}.
+%The function will take two samples at an interval defined by \var{Milliseconds}.
+Функция также возьмёт два образца с интервалом, заданным параметром \var{Миллисекунды}.
 
-Some processes will live between \var{w} and die at \var{x}, some between \var{y} and \var{z}, and some between \var{x} and \var{y}. These samples will not be too significant as they're incomplete.
+%Some processes will live between \var{w} and die at \var{x}, some between \var{y} and \var{z}, and some between \var{x} and \var{y}. These samples will not be too significant as they're incomplete.
+Некоторые процессы будут живы после момента \var{w} и умрут в момент \var{x}, некоторые между \var{y} и \var{z}, а некоторые между \var{x} и \var{y}. Эти образцы не будут иметь большого значения, поскольку они неполны.
 
-If the majority of your processes run between a time interval \var{x} to \var{y} (in absolute terms), you should make sure that your sampling time is smaller than this so that for many processes, their lifetime spans the equivalent of \var{w} and \var{z}. Not doing this can skew the results: long-lived processes that have 10 times the time to accumulate data (say reductions) will look like huge consumers when they're not one.\footnote{Warning: this function depends on data gathered at two snapshots, and then building a dictionary with entries to differentiate them. This can take a heavy toll on memory when you have many tens of thousands of processes, and a little bit of time.}
+%If the majority of your processes run between a time interval \var{x} to \var{y} (in absolute terms), you should make sure that your sampling time is smaller than this so that for many processes, their lifetime spans the equivalent of \var{w} and \var{z}. Not doing this can skew the results: long-lived processes that have 10 times the time to accumulate data (say reductions) will look like huge consumers when they're not one.\footnote{Warning: this function depends on data gathered at two snapshots, and then building a dictionary with entries to differentiate them. This can take a heavy toll on memory when you have many tens of thousands of processes, and a little bit of time.}
+Если подавляющее большинство ваших процессов исполняются в интервале времени между \var{x} и \var{y} (в абсолютном измерении), вам следует убедиться, что окно интервала сбора образцов короче этого времени, так чтобы время жизни процессов было аналогично интервалу между \var{w} и \var{z}. Если не следовать этому правилу, то результаты могут быть искажены: долгоживущие процессы, имеющие в 10 раз больше времени для накопления данных (например, редукций), будут выглядеть огромными потребителями ресурса, когда на самом деле они таковыми не являются\footnote{Внимание: эта функция зависит от данных, собранных несколькими снимками, и затем хранит их в словаре под разными ключами. Это может привести к росту расхода памяти, если у вас имеются десятки тысяч процессов и вы занимаетесь анализом в течение некоторого времени.}.
 
-The function, once running gives results like follows:
+%The function, once running gives results like follows:
+Функция после выполнения даст подобные следующему результаты:
 
 \begin{VerbatimEshell}
 5> recon:proc_window(reductions, 3, 500).
@@ -1672,73 +1797,101 @@ The function, once running gives results like follows:
    {initial_call,{erlang,apply,2}}]}]
 \end{VerbatimEshell}
 
-With these two functions, it becomes possible to hone in on a specific process that is causing issues or misbehaving.
+%With these two functions, it becomes possible to hone in on a specific process that is causing issues or misbehaving.
+С этими двумя функциями становится возможным рассмотреть конкретный процесс, который причиняет проблемы или ведёт себя неадекватно.
 
 
-\subsection{OTP Processes}
+%\subsection{OTP Processes}
+\subsection{OTP-процессы}
 
-When processes in question are OTP processes (most of the processes in a production system should definitely be OTP processes), you instantly win more tools to inspect them.
+%When processes in question are OTP processes (most of the processes in a production system should definitely be OTP processes), you instantly win more tools to inspect them.
+Когда процессы, которые вызывают вопросы, являются процессами OTP (большинство процессов на производстве определённо должны быть такими), то вы моментально приобретаете ещё несколько инструментов для их изучения.
 
-In general the \module{sys} module\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} is what you want to look into. Read the documentation on it and you'll discover why it's so useful. It contains the following features for any OTP process:
+%In general the \module{sys} module\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} is what you want to look into. Read the documentation on it and you'll discover why it's so useful. It contains the following features for any OTP process:
+В общем модуль \module{sys}\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} это то, что вам потребуется. Прочтите документацию для него и вы поймёте, почему он такой полезный. Он может выдать следующую информацию для любого ОТР-процесса:
 
 \begin{itemize*}
-	\item logging of all messages and state transitions, both to the shell or to a file, or even in an internal buffer to be queried;
-	\item statistics (reductions, message counts, time, and so on);
-	\item fetching the status of a process (metadata including the state);
-	\item fetching the state of a process (as in the \expression{\#state\{\}} record);
-	\item replacing that state
-	\item custom debugging functions to be used as callbacks
+%	\item logging of all messages and state transitions, both to the shell or to a file, or even in an internal buffer to be queried;
+	\item журналирование всех сообщений и переходов между состояниями, как в консоль, так и в файл или во внутренний буфер, который затем можно анализировать;
+%	\item statistics (reductions, message counts, time, and so on);
+	\item статистика (редукции, счёт числа сообщений, время и так далее);
+%	\item fetching the status of a process (metadata including the state);
+	\item статус процесса (метаданные, включая состояние);
+%	\item fetching the state of a process (as in the \expression{\#state\{\}} record);
+	\item выборка состояния процесса (содержимое той самой знаменитой записи \expression{\#state\{\}});
+%	\item replacing that state
+	\item изменение содержимого этого состояния;
+%	\item custom debugging functions to be used as callbacks
+	\item ваши собственные функции могут быть использованы в качестве функций обратного вызова.
 \end{itemize*}
 
-It also provides functionality to suspend or resume process execution.
+%It also provides functionality to suspend or resume process execution.
+Также он обеспечивает возможность заморозить и продолжить исполнение процесса.
 
-I won't go into a lot of details about these functions, but be aware that they exist.
+%I won't go into a lot of details about these functions, but be aware that they exist.
+Я не буду углубляться в подробное описание этих функций, просто знайте, что такие возможности существуют.
 
-\subsection{Ports}
 
-Similarly to processes, Erlang ports allow a lot of introspection. The info can be accessed by calling \function{erlang:port\_info(Port, Key)}, and more info is available through the \module{inet} module. Most of it has been regrouped by the \function{recon:port\_info/1-2} functions, which work using a somewhat similar interface to their process-related counterparts. 
+\subsection{Порты}
+
+%Similarly to processes, Erlang ports allow a lot of introspection. The info can be accessed by calling \function{erlang:port\_info(Port, Key)}, and more info is available through the \module{inet} module. Most of it has been regrouped by the \function{recon:port\_info/1-2} functions, which work using a somewhat similar interface to their process-related counterparts. 
+Подобно процессам, порты в Erlang позволяют выполнять разную диагностику. Доступ к информации можно получить через функцию \function{erlang:port\_info(Порт, Ключ)}, и ещё больше можно узнать с помощью модуля \module{inet}. Большая часть этой диагностики также собрана в функциях \function{recon:port\_info/1-2}, которые работают подобно функциям анализа процессов.
 
 \begin{description*}
-	\item[Meta] \hfill
-		\begin{description}		
-			\item[\expression{id}] internal index of a port. Of no particular use except to differentiate ports.
-			
-			\item[\expression{name}] type of the port — with names such as \expression{"tcp\_inet"}, \expression{"udp\_inet"}, or \expression{"efile"}, for example.
-			
-			\item[\expression{os\_pid}] if the port is not an inet socket, but rather represents an external process or program, this value contains the os pid related to the said external program.
-		\end{description}
+\item[Общие (meta)] \hfill
+\begin{description}		
+%	\item[\expression{id}] internal index of a port. Of no particular use except to differentiate ports.
+	\item[\expression{id}] внутренний индекс порта. Не очень полезен кроме как для того, чтобы различать порты между собой.
+	
+%	\item[\expression{name}] type of the port — with names such as \expression{"tcp\_inet"}, \expression{"udp\_inet"}, or \expression{"efile"}, for example.
+	\item[\expression{name}] тип порта --- содержит имена, такие как \expression{"tcp\_inet"}, \expression{"udp\_inet"}, или \expression{"efile"}, для примера.
+	
+%	\item[\expression{os\_pid}] if the port is not an inet socket, but rather represents an external process or program, this value contains the os pid related to the said external program.
+	\item[\expression{os\_pid}] если порт не является сокетом модуля inet, а представляет внешний процесс или приложение, то это значение содержит идентификатор процесса ОС этой программы.
+\end{description}
 
-	\item[Signals] \hfill
-		\begin{description}		
-			\item[\expression{connected}] Each port has a controlling process in charge of it, and this process' pid is the \expression{connected} one.
-			
-			\item[\expression{links}] ports can be linked with processes, much like other processes can be. The list of linked processes is contained here. Unless the process has been owned by or manually linked to a lot of processes, this should be safe to use.
-			
-			\item[\expression{monitors}] ports that represent external programs can have these programs end up monitoring Erlang processes. These processes are listed here.
-		\end{description}
-		
-	\item[IO] \hfill
-		\begin{description}		
-			\item[\expression{input}] the number of bytes read from the port.
-			
-			\item[\expression{output}] the number of bytes written to the port.
-		\end{description}
+\item[Сигналы (signals)] \hfill
+\begin{description}		
+%	\item[\expression{connected}] Each port has a controlling process in charge of it, and this process' pid is the \expression{connected} one.
+	\item[\expression{connected}] каждый порт имеет контролирующий процесс, который за него отвечает, \expression{connected} возвращает идентификатор этого процесса.
+	
+%	\item[\expression{links}] ports can be linked with processes, much like other processes can be. The list of linked processes is contained here. Unless the process has been owned by or manually linked to a lot of processes, this should be safe to use.
+	\item[\expression{links}] порты могут быть связаны с процессами, так же как и обычные процессы. Список связанных процессов содержится здесь. Если процессом не владеют или не связаны с ним вручную множество других процессов, то это значение должно быть безопасным.
+	
+%	\item[\expression{monitors}] ports that represent external programs can have these programs end up monitoring Erlang processes. These processes are listed here.
+	\item[\expression{monitors}] порты, представляющие внешние программы, могут позволить этим программам мониторить процессы Erlang. Такие процессы перечислены здесь.
+\end{description}
+	
+\item[Ввод-вывод (io)] \hfill
+\begin{description}		
+%	\item[\expression{input}] the number of bytes read from the port.
+	\item[\expression{input}] число байтов, прочитанных из порта.
+	
+%	\item[\expression{output}] the number of bytes written to the port.
+	\item[\expression{output}] число байтов, записанных в порт.
+\end{description}
 
-	\item[Memory Used] \hfill
-		\begin{description}		
-			\item[\expression{memory}] this is the memory (in bytes) allocated by the runtime system for the port. This number tends to be small-ish and excludes space allocated by the port itself.
-			
-			\item[\expression{queue\_size}] Port programs have a specific queue, called the driver queue\footnote{The driver queue is available to queue output from the emulator to the driver (data from the driver to the emulator is queued by the emulator in normal Erlang message queues). This can be useful if the driver has to wait for slow devices etc, and wants to yield back to the emulator.}. This return the size of this queue, in bytes.
-		\end{description}
-		
-	\item[Type-Specific] \hfill
-		\begin{description}		
-			\item[Inet Ports] Returns inet-specific data, including statistics\footnote{\href{http://www.erlang.org/doc/man/inet.html\#getstat-1}{http://www.erlang.org/doc/man/inet.html\#getstat-1}}, the local address and port number for the socket (\expression{sockname}), and the inet options used\footnote{\href{http://www.erlang.org/doc/man/inet.html\#setopts-2}{http://www.erlang.org/doc/man/inet.html\#setopts-2}}
-			\item[Others] currently no other form than inet ports are supported in recon, and an empty list is returned.
-		\end{description}
+\item[Расход памяти (memory\_used)] \hfill
+\begin{description}		
+%	\item[\expression{memory}] this is the memory (in bytes) allocated by the runtime system for the port. This number tends to be small-ish and excludes space allocated by the port itself.
+	\item[\expression{memory}] покажет размер памяти (в байтах), выделенной системой Erlang для этого порта. Число это обычно небольшое и не включает размер памяти, которую порт выделил для себя сам.
+	
+%	\item[\expression{queue\_size}] Port programs have a specific queue, called the driver queue\footnote{The driver queue is available to queue output from the emulator to the driver (data from the driver to the emulator is queued by the emulator in normal Erlang message queues). This can be useful if the driver has to wait for slow devices etc, and wants to yield back to the emulator.}. This return the size of this queue, in bytes.
+	\item[\expression{queue\_size}] программы портов имеют отдельную очередь, которая называется очередью драйвера\footnote{Очередь драйвера доступна для накопления вывода из эмулятора к драйверу (данные в обратную сторону от драйвера к эмулятору накапливаются в обычных очередях сообщений Erlang). Это может пригодиться, если драйвер ждёь ответа например от медленных устройств, и хочет быстрее вернуть управление эмулятору.}. Эта опция вернёт размер этой очереди, в байтах.
+\end{description}
+	
+\item[Зависящие от типа (type)] \hfill
+\begin{description}		
+%	\item[Inet Ports] Returns inet-specific data, including statistics\footnote{\href{http://www.erlang.org/doc/man/inet.html\#getstat-1}{http://www.erlang.org/doc/man/inet.html\#getstat-1}}, the local address and port number for the socket (\expression{sockname}), and the inet options used\footnote{\href{http://www.erlang.org/doc/man/inet.html\#setopts-2}{http://www.erlang.org/doc/man/inet.html\#setopts-2}}
+	\item[Сетевые порты] вернёт данные по сокету, включая статистику\footnote{\href{http://www.erlang.org/doc/man/inet.html\#getstat-1}{http://www.erlang.org/doc/man/inet.html\#getstat-1}}, локальный адрес и номер порта для сокета (\expression{sockname}), и использованные опции модуля inet\footnote{\href{http://www.erlang.org/doc/man/inet.html\#setopts-2}{http://www.erlang.org/doc/man/inet.html\#setopts-2}}
+
+%	\item[Others] currently no other form than inet ports are supported in recon, and an empty list is returned.
+	\item[Прочие] в данное время другие типы портов, кроме как порты inet, не поддерживаются библиотекой recon, и поэтому вы можете увидеть здесь пустой список.
+\end{description}
 \end{description*}
 		
-The list can be obtained as follows:
+%The list can be obtained as follows:
+Список можно получить таким образом:
 
 \begin{VerbatimEshell}
 1> recon:port_info("#Port<0.818>").
@@ -1763,9 +1916,11 @@ The list can be obtained as follows:
                   {...}|...]}]}]
 \end{VerbatimEshell}
 		
-On top of this, functions to find out specific problematic ports exist the way they do for processes. The gotcha is that so far, recon only supports them for inet ports and with restricted attributes: the number of octets (bytes) sent, received, or both (\expression{send\_oct}, \expression{recv\_oct}, \expression{oct}, respectively), or the number of packets sent, received, or both (\expression{send\_cnt}, \expression{recv\_cnt}, \expression{cnt}, respectively).
+%On top of this, functions to find out specific problematic ports exist the way they do for processes. The gotcha is that so far, recon only supports them for inet ports and with restricted attributes: the number of octets (bytes) sent, received, or both (\expression{send\_oct}, \expression{recv\_oct}, \expression{oct}, respectively), or the number of packets sent, received, or both (\expression{send\_cnt}, \expression{recv\_cnt}, \expression{cnt}, respectively).
+Дополнительно к этому, как и для процессов, имеются функции поиска конкретных проблемных портов. На данный момент recon поддерживает их только для портов модуля inet и с ограниченным числом атрибутов: число октетов (байтов) отправлено, принято, или то и другое (\expression{send\_oct}, \expression{recv\_oct}, \expression{oct}, соответственно), или число пакетов отправлено, принято, или то и другое (\expression{send\_cnt}, \expression{recv\_cnt}, \expression{cnt}, соответственно).
 
-So for the cumulative total, which can help find out who is slowly but surely eating up all your bandwidth:
+%So for the cumulative total, which can help find out who is slowly but surely eating up all your bandwidth:
+Итак для накопительной суммы, которая может помочь найти тех, кто медленно но уверенно съедает вашу пропускную способность сети:
 
 \begin{VerbatimEshell}
 2> recon:inet_count(oct, 3).
@@ -1777,9 +1932,11 @@ So for the cumulative total, which can help find out who is slowly but surely ea
   [{recv_oct,15630954707},{send_oct,0}]}]
 \end{VerbatimEshell}
 
-Which suggest some ports are doing only input and eating lots of bytes. You can then use \function{recon:port\_info("\#Port<0.6821166>")} to dig in and find who owns that socket, and what is going on with it.
+%Which suggest some ports are doing only input and eating lots of bytes. You can then use \function{recon:port\_info("\#Port<0.6821166>")} to dig in and find who owns that socket, and what is going on with it.
+Это показывает нам, что некоторые порты выполняют лишь приём и потребляют очень много байтов. Затем можно использовать \function{recon:port\_info("\#Port<0.6821166>")}, чтобы вкопаться поглубже и найти, кто владеет сокетом, и что с ним происходит.
 
-Or in any other case, we can look at what is sending the most data within any time window\footnote{See the explanations for the \function{recon:proc\_window/3} in the preceding subsection} with the \function{recon:inet\_window(Attribute, Count, Milliseconds)} function:
+%Or in any other case, we can look at what is sending the most data within any time window\footnote{See the explanations for the \function{recon:proc\_window/3} in the preceding subsection} with the \function{recon:inet\_window(Attribute, Count, Milliseconds)} function:
+Или для любого другого случая, можно посмотреть на тех, кто посылает больше всего данных в течение интервала времени\footnote{Смотрите пояснения к \function{recon:proc\_window/3} в предыдущей подсекции.} с помощью функции \function{recon:inet\_window(Attribute, Count, Milliseconds)}:
 
 \begin{VerbatimEshell}
 3> recon:inet_window(send_oct, 3, 5000).
@@ -1788,60 +1945,94 @@ Or in any other case, we can look at what is sending the most data within any ti
  {#Port<0.12518151>,1214051,[{send_oct,600070031}]}]
 \end{VerbatimEshell}
 
-For this one, the value in the middle of the tuple is what \expression{send\_oct} was worth (or any chosen attribute for each call) during the specific time interval chosen (5 seconds here).
+%For this one, the value in the middle of the tuple is what \expression{send\_oct} was worth (or any chosen attribute for each call) during the specific time interval chosen (5 seconds here).
+Для этого примера, значение в середине кортежа это изменение \expression{send\_oct} (или любой выбранный атрибут для каждого вызова), во время выбранного интервала времени (в данном случае 5 секунд).
 
-There is still some manual work involved into properly linking a misbehaving port to a process (and then possibly to a specific user or customer), but all the tools are in place. 
+%There is still some manual work involved into properly linking a misbehaving port to a process (and then possibly to a specific user or customer), but all the tools are in place. 
+Нужно проделать дополнительную работу вручную, тобы установить связь между странно ведущим себя портом и процессом (и затем, вероятно, конкретным клиентом или пользователем системы), но все инструменты имеются в наличии.
 
 %%%
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item What kind of values are reported for Erlang's memory?
-	\item What's a valuable process-related metric for a global view?
-	\item What's a port, and how should it be monitored globally?
-	\item Why can't you trust \app{top} or \app{htop} for CPU usage with Erlang systems? What's the alternative?
-	\item Name two types of signal-related information available for processes
-	\item How can you find what code a specific process is running?
-	\item What are the different kinds of memory information available for a specific process?
-	\item How can you know if a process is doing a lot of work?
-	\item Name a few of the values that are dangerous to fetch when inspecting processes in a production system.
-	\item What are some features provided to OTP processes through the sys module?
-	\item What kind of values are available when inspecting inet ports?
-	\item How can you find the type of a port (Files, TCP, UDP)?
+%	\item What kind of values are reported for Erlang's memory?
+	\item Какого рода значения можно получить о памяти Erlang?
+%	\item What's a valuable process-related metric for a global view?
+	\item Назовите ценную метрику, которую можно получить при обзоре состояния процессов издалека, в глобальном масштабе.
+%	\item What's a port, and how should it be monitored globally?
+	\item Что такое порт, и как следует выполнять его глобальный мониторинг?
+%	\item Why can't you trust \app{top} or \app{htop} for CPU usage with Erlang systems? What's the alternative?
+	\item Почему не следует доверять показаниям утилит операционной системы \app{top} или \app{htop} относительно расхода процессорного времени в Erlang-системах?
+%	\item Name two types of signal-related information available for processes
+	\item Назовите два вида информации о процессах, связанной с сигналами.
+%	\item How can you find what code a specific process is running?
+	\item Как можно узнать, какой код сейчас исполняет некоторый процесс?
+%	\item What are the different kinds of memory information available for a specific process?
+	\item Какие разные типы информации о памяти имеются для каждого конкретного процесса?
+%	\item How can you know if a process is doing a lot of work?
+	\item Как можно узнать, что процесс выполняет очень много работы?
+%	\item Name a few of the values that are dangerous to fetch when inspecting processes in a production system.
+	\item Назовите несколько значений, получение которых может оказаться опасным при диагностике и отладке?
+%	\item What are some features provided to OTP processes through the sys module?
+	\item Какие дополнительные возможности доступны через модуль sys для ОТР-процессов?
+%	\item What kind of values are available when inspecting inet ports?
+	\item Какие значения можно получить при диагностике интернет сокетов (портов модуля inets)?
+%	\item How can you find the type of a port (Files, TCP, UDP)?
+	\item Как можно узнать тип порта (файловый, ТСР- или UDP-сокет)?
 \end{enumerate}
 
-\subsection*{Open-ended Questions}
+\subsection*{\OpenEndedTitle{}}
 
 \begin{enumerate}
-	\item Why do you want a long time window available on global metrics?
-	\item Which would be more appropriate between \function{recon:proc\_count/2} and \function{recon:proc\_window/3} to find issues with:
+%	\item Why do you want a long time window available on global metrics?
+	\item Почему в глобальных метриках для вас очень полезно иметь историю значений за долгое время?
+%	\item Which would be more appropriate between \function{recon:proc\_count/2} and \function{recon:proc\_window/3} to find issues with:
+	\item Какая из функций \function{recon:proc\_count/2} и \function{recon:proc\_window/3} больше подходит для поиска следующих проблем:
 		\begin{enumerate*}
-			\item Reductions \item Memory \item Message queue length
+%			\item Reductions \item Memory \item Message queue length
+			\item Количество редукций \item Память \item Длина очереди сообщений
 		\end{enumerate*}
-	\item How can you find information about who is the supervisor of a given process?
-	\item When should you use \function{recon:inet\_count/2}? \function{recon:inet\_window/3}?
-	\item What could explain the difference in memory reported by the operating system and the memory functions in Erlang?
-	\item Why is it that Erlang can sometimes look very busy even when it isn't?
-	\item How can you find what proportion of processes on a node are ready to run, but can't be scheduled right away?
+%	\item How can you find information about who is the supervisor of a given process?
+	\item Как можно выяснить, какой процесс является наблюдателем для некоторого процесса?
+%	\item When should you use \function{recon:inet\_count/2}? \function{recon:inet\_window/3}?
+	\item Когда вам следует использовать \function{recon:inet\_count/2}? \function{recon:inet\_window/3}?
+%	\item What could explain the difference in memory reported by the operating system and the memory functions in Erlang?
+	\item Чем можно объяснить разницу в сообщаемом расходе памяти между операционной системой и внутренними функциями диагностики Erlang?
+%	\item Why is it that Erlang can sometimes look very busy even when it isn't?
+	\item Почему Erlang-узел иногда выглядит очень занятым снаружи, когда на самом деле он ничего не делает?
+%	\item How can you find what proportion of processes on a node are ready to run, but can't be scheduled right away?
+	\item Как можно узнать пропорцию числа процессов на узле, которые готовы к работе, но не могут немедленно получить от планировщика процессорное время?
 \end{enumerate}
 
-\subsection*{Hands-On}
+\subsection*{\HandsOnTitle{}}
 
-Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}:
+%Using the code at
+Используя код, который находится по адресу
+\href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo}
+ответьте на вопросы:
 
 \begin{enumerate}
-	\item What's the system memory?
-	\item Is the node using a lot of CPU resources?
-	\item Is any process mailbox overflowing?
-	\item Which chatty process (\module{council\_member}) takes the most memory?
-	\item Which chatty process is eating the most CPU?
-	\item Which chatty process is consuming the most bandwidth?
-	\item Which chatty process sends the most messages over TCP? The least?
-	\item Can you find out if a specific process tends to hold multiple connections or file descriptors open at the same time on a node?
-	\item Can you find out which function is being called by the most processes at once on the node right now?
+%	\item What's the system memory?
+	\item Что такое память системы?
+%	\item Is the node using a lot of CPU resources?
+	\item Использует ли узел очень много ресурсов процессора?
+%	\item Is any process mailbox overflowing?
+	\item Переполняется ли почтовый ящик какого-то из процессов?
+%	\item Which chatty process (\module{council\_member}) takes the most memory?
+	\item Какой из разговорчивых процессов (\module{council\_member}) занимает больше всего памяти?
+%	\item Which chatty process is eating the most CPU?
+	\item Какой из разговорчивых процессов потребляет больше всего ресурсов процессора?
+%	\item Which chatty process is consuming the most bandwidth?
+	\item Какой из разговорчивых процессов потребляет больше всего ресурсов сети?
+%	\item Which chatty process sends the most messages over TCP? The least?
+	\item Какой из разговорчивых процессов посылает больше всего сообщений по протоколу ТСР? А какой меньше всего?
+%	\item Can you find out if a specific process tends to hold multiple connections or file descriptors open at the same time on a node?
+	\item Можете ли вы найти такой процесс, который удерживает множество подключений или открытых дескрипторов файлов на данном узле?
+%	\item Can you find out which function is being called by the most processes at once on the node right now?
+	\item Можете ли вы найти, какая функция вызывается наибольшим количеством процессов одновременно в данный момент на этом узле?
 \end{enumerate}
 
 %%%
@@ -1913,10 +2104,12 @@ Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/
 %%%
 %%%
 
-\chapter{Reading Crash Dumps}
+%\chapter{Reading Crash Dumps}
+\chapter{Читаем файлы аварийных дампов}
 \label{chap:crash-dumps}
 
-Whenever an Erlang node crashes, it will generate a crash dump\footnote{If it isn't killed by the OS for violating ulimits while dumping or didn't segfault.}.
+%Whenever an Erlang node crashes, it will generate a crash dump\footnote{If it isn't killed by the OS for violating ulimits while dumping or didn't segfault.}.
+Когда Erlang-узел завершает работу аварийно, он создаёт файл аварийного дампа\footnote{Если он не нарушил ограничения ОС (ulimit) во время записи файла или не упал с ошибкой сегментации (segfault).}.
 
 The format is mostly documented in Erlang's official documentation\footnote{\href{http://www.erlang.org/doc/apps/erts/crash\_dump.html}{http://www.erlang.org/doc/apps/erts/crash\_dump.html}}, and anyone willing to dig deeper inside of it will likely be able to figure out what data means by looking at that documentation. There will be specific data that is hard to understand without also understanding the part of the VM they refer to, but that might be too complex for this document.
 
@@ -2002,7 +2195,7 @@ This data dump won't point out a problem directly to your face, but will be a go
 \begin{itemize*}
 	\item memory fragmentation;
 	\item memory leaks in C code or drivers;
-	\item lots of memory that got to be garbage-collected before generating the crash dump\footnote{Notably here is reference-counted binary memory, which sits in a global heap, but ends up being garbage-collected before generating the crash dump. The binary memory can therefore be underreported. See Chapter \ref{chap:memory-leaks} for more details}.
+	\item lots of memory that got to be garbage-collected before generating the crash dump\footnote{Notably here is reference-counted binary memory, which sits in a global heap, but ends up being garbage-collected before generating the crash dump. The binary memory can therefore be underreported. See Chapter \NamedRef{chap:memory-leaks} for more details}.
 \end{itemize*}
 
 More generally, look for anything surprising for memory there. Correlate it with the number of processes and the size of mailboxes. One may explain the other. 
@@ -2031,7 +2224,7 @@ This one will run over the crash dump and output all of the functions scheduled 
 
 \section{Too Many (or too few) Processes}
 
-The process count is mostly useful when you know your node's usual average count\footnote{See subsection \ref{subsec:global-procs} for details}, in order to figure if it's abnormal or not.
+The process count is mostly useful when you know your node's usual average count\footnote{See subsection \NamedRef{subsec:global-procs} for details}, in order to figure if it's abnormal or not.
 
 A count that is higher than normal may reveal a specific leak or overload, depending on applications.
 
@@ -2046,13 +2239,13 @@ In such a case, the issue is that a specific application (\expression{<AppName>}
 
 \section{Too Many Ports}
 
-Similarly to the process count, the port count is simple and mostly useful when you know your usual values\footnote{See subsection \ref{subsec:global-ports} for details}.
+Similarly to the process count, the port count is simple and mostly useful when you know your usual values\footnote{See subsection \NamedRef{subsec:global-ports} for details}.
 
 A high count may be the result of overload, Denial of Service attacks, or plain old resource leaks. Looking at the type of port leaked (TCP, UDP, or files) can also help reveal if there was contention on specific resources, or if the code using them is just wrong.
 
 \section{Can't Allocate Memory}
 
-These are by far the most common types of crashes you are likely to see. There's so much to cover, that Chapter \ref{chap:memory-leaks} is dedicated to understanding them and doing the required debugging on live systems.
+These are by far the most common types of crashes you are likely to see. There's so much to cover, that Chapter \NamedRef{chap:memory-leaks} is dedicated to understanding them and doing the required debugging on live systems.
 
 In any case, the crash dump will help figure out what the problem was after the fact. The process mailboxes and individual heaps are usually good indicators of issues. If you're running out of memory without any mailbox being outrageously large, look at the processes heap and stack sizes as returned by the recon script.
 
@@ -2073,7 +2266,7 @@ If it looks more or less reasonable, head towards the "Memory" section of the du
 
 \subsection*{Hands-On}
 
-Using the analysis of a crash dump in Section \ref{sec:crashdump-general-view}:
+Using the analysis of a crash dump in Section \NamedRef{sec:crashdump-general-view}:
 
 \begin{enumerate}
 	\item What are specific outliers that could point to an issue?
@@ -2130,7 +2323,7 @@ There are truckloads of ways for an Erlang node to bleed memory. They go from ex
 You will find out about memory leaks in two ways:
 
 \begin{enumerate*}
-	\item A crash dump (see Chapter \ref{chap:crash-dumps});
+	\item A crash dump (see Chapter \NamedRef{chap:crash-dumps});
 	\item By finding a worrisome trend in the data you are monitoring. 
 \end{enumerate*}
 
@@ -2142,10 +2335,10 @@ Whenever someone calls for help saying "oh no, my nodes are crashing", the first
 \begin{itemize*}
 	\item Do you have a crash dump and is it complaining about memory specifically? If not, the issue may be unrelated. If so, go dig into it, it's full of data.
 	\item Are the crashes cyclical? How predictable are they? What else tends to happen at around the same time and could it be related?
-	\item Do crashes coincide with peaks in load on your systems, or do they seem to happen at more or less any time? Crashes that happen especially \emph{during} peak times are often due to bad overload management (see Chapter \ref{chap:overload}). Crashes that happen at any time, even when load goes down following a peak are more likely to be actual memory issues.
+	\item Do crashes coincide with peaks in load on your systems, or do they seem to happen at more or less any time? Crashes that happen especially \emph{during} peak times are often due to bad overload management (see Chapter \NamedRef{chap:overload}). Crashes that happen at any time, even when load goes down following a peak are more likely to be actual memory issues.
 \end{itemize*}
 
-If all of this seems to point towards a memory leak, install one of the metrics libraries mentioned in Chapter \ref{chap:runtime-metrics} and/or \otpapp{recon} and get ready to dive in.\footnote{See Chapter \ref{chap:connecting} if you need help to connect to a running node}
+If all of this seems to point towards a memory leak, install one of the metrics libraries mentioned in Chapter \NamedRef{chap:runtime-metrics} and/or \otpapp{recon} and get ready to dive in.\footnote{See Chapter \NamedRef{chap:connecting} if you need help to connect to a running node}
 
 The first thing to look at in any of these cases is trends. Check for all types of memory using \expression{erlang:memory()} or some variant of it you have in a library or metrics system. Check for the following points:
 
@@ -2167,7 +2360,7 @@ If you do none of this, consider what you do to interact with the node. One spec
 
 \subsection{Binary}
 
-See Section \ref{sec:binaries}.
+See Section \NamedRef{sec:binaries}.
 
 \subsection{Code}
 
@@ -2206,7 +2399,7 @@ This will return a list of processes with neither. For supervisors, just fetchin
 
 \subsubsection{Memory Used}
 
-The per-process memory model is briefly described in Subsection \ref{subsec:memory-process-level}, but generally speaking, you can find which individual processes use the most memory by looking for their \term{memory} attribute. You can look things up either as absolute terms or as a sliding window.
+The per-process memory model is briefly described in Subsection \NamedRef{subsec:memory-process-level}, but generally speaking, you can find which individual processes use the most memory by looking for their \term{memory} attribute. You can look things up either as absolute terms or as a sliding window.
 
 For memory leaks, unless you're in a predictable fast increase, absolute values are usually those worth digging into first:
 
@@ -2226,7 +2419,7 @@ For memory leaks, unless you're in a predictable fast increase, absolute values 
    {initial_call,{proc_lib,init_p,5}}]}]
 \end{VerbatimEshell}
 
-Attributes that may be interesting to check other than \term{memory} may be any other fields in Subsection \ref{subsec:digging-procs}, including \term{message\_queue\_len}, but \term{memory} will usually encompass all other types.
+Attributes that may be interesting to check other than \term{memory} may be any other fields in Subsection \NamedRef{subsec:digging-procs}, including \term{message\_queue\_len}, but \term{memory} will usually encompass all other types.
 
 \subsubsection{Garbage Collections}
 \label{subsubsec:leak-gc}
@@ -2268,7 +2461,7 @@ You can then find out if such monitoring messages tend to coincide with the memo
 
 \subsection{Nothing in Particular}
 
-If nothing seems to stand out in the preceding material, binary leaks (Section \ref{sec:binaries}) and memory fragmentation (Section \ref{sec:memory-fragmentation}) may be the culprits. If nothing there fits either, it's possible a C driver, NIF, or even the VM itself is leaking. Of course, a possible scenario is that load on the node and memory usage were proportional, and nothing specifically ended up being leaky or modified. The system just needs more resources or nodes.
+If nothing seems to stand out in the preceding material, binary leaks (Section \NamedRef{sec:binaries}) and memory fragmentation (Section \NamedRef{sec:memory-fragmentation}) may be the culprits. If nothing there fits either, it's possible a C driver, NIF, or even the VM itself is leaking. Of course, a possible scenario is that load on the node and memory usage were proportional, and nothing specifically ended up being leaky or modified. The system just needs more resources or nodes.
 
 \section{Binaries}
 \label{sec:binaries}
@@ -2358,7 +2551,7 @@ A fix for this can be implemented transparently in the router's API functions, w
 \section{Memory Fragmentation}
 \label{sec:memory-fragmentation}
 
-Memory fragmentation issues are intimately related to Erlang's memory model, as described in Section \ref{subsec:erlang-memory-model}. It is by far one of the trickiest issues of running long-lived Erlang nodes (often when individual node uptime reaches many months), and will show up relatively rarely.
+Memory fragmentation issues are intimately related to Erlang's memory model, as described in Section \NamedRef{subsec:erlang-memory-model}. It is by far one of the trickiest issues of running long-lived Erlang nodes (often when individual node uptime reaches many months), and will show up relatively rarely.
 
 The general symptoms of memory fragmentation are large amounts of memory being allocated during peak load, and that memory not going away after the fact. The damning factor will be that the node will internally report much lower usage (through \function{erlang:memory()}) than what is reported by the operating system.
 
@@ -2381,7 +2574,7 @@ That should confirm if memory seems to be fragmented or not.
 
 \subsubsection{Find the Guilty Allocator}
 
-Call \expression{recon\_alloc:memory(allocated\_types)} to see which type of util allocator (see Section \ref{subsec:erlang-memory-model}) is allocating the most memory. See if one looks like an obvious culprit when you compare the results with \expression{erlang:memory()}.
+Call \expression{recon\_alloc:memory(allocated\_types)} to see which type of util allocator (see Section \NamedRef{subsec:erlang-memory-model}) is allocating the most memory. See if one looks like an obvious culprit when you compare the results with \expression{erlang:memory()}.
 
 Try \expression{recon\_alloc:fragmentation(current)}. The resulting data dump will show different allocators on the node with various usage ratios.\footnote{More information is available at \href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}}
 
@@ -2394,7 +2587,7 @@ If there is a big difference, you are likely having issues with memory fragmenta
 
 \subsubsection{The Global Level}
 
-To understand where memory goes, one must first understand the many allocators being used. Erlang's memory model, for the entire virtual machine, is hierarchical. As shown in Figure \ref{fig:allocators},  there are two main allocators, and a bunch of sub-allocators (numbered 1-9). The sub-allocators are the specific allocators used directly by Erlang code and the VM for most data types:\footnote{The complete list of where each data type lives can be found in \href{https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl\_alloc.types}{erts/emulator/beam/erl\_alloc.types}}
+To understand where memory goes, one must first understand the many allocators being used. Erlang's memory model, for the entire virtual machine, is hierarchical. As shown in Figure \NamedRef{fig:allocators},  there are two main allocators, and a bunch of sub-allocators (numbered 1-9). The sub-allocators are the specific allocators used directly by Erlang code and the VM for most data types:\footnote{The complete list of where each data type lives can be found in \href{https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl\_alloc.types}{erts/emulator/beam/erl\_alloc.types}}
 
 
 \begin{figure}
@@ -2415,13 +2608,13 @@ To understand where memory goes, one must first understand the many allocators b
     \item \term{std\_alloc}: catch-all allocator for whatever didn't fit the previous categories. The process registry for named process is there.
 \end{enumerate*}
 
-By default, there will be one instance of each allocator per scheduler (and you should have one scheduler per core), plus one instance to be used by linked-in drivers using async threads. This ends up giving you a structure a bit like in Figure \ref{fig:allocators}, but split it in \var{N} parts at each leaf.
+By default, there will be one instance of each allocator per scheduler (and you should have one scheduler per core), plus one instance to be used by linked-in drivers using async threads. This ends up giving you a structure a bit like in Figure \NamedRef{fig:allocators}, but split it in \var{N} parts at each leaf.
 
 Each of these sub-allocators will request memory from \term{mseg\_alloc} and \term{sys\_alloc} depending on the use case, and in two possible ways. The first way is to act as a multiblock carrier (\term{mbcs}), which will fetch chunks of memory that will be used for many Erlang terms at once. For each \term{mbc}, the VM will set aside a given amount of memory (about 8MB by default in our case, which can be configured by tweaking VM options), and each term allocated will be free to go look into the many multiblock carriers to find some decent space in which to reside.
 
 Whenever the item to be allocated is greater than the single block carrier threshold (\term{sbct})\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}}, the allocator switches this allocation into a single block carrier (\term{sbcs}). A single block carrier will request memory directly from \term{mseg\_alloc} for the first \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} entries, and then switch over to \term{sys\_alloc} and store the term there until it's deallocated.
 
-So looking at something such as the binary allocator, we may end up with something similar to Figure \ref{fig:allocation-1-normal}
+So looking at something such as the binary allocator, we may end up with something similar to Figure \NamedRef{fig:allocation-1-normal}
 
 \begin{figure}
   \includegraphics{allocation-1-normal.pdf}%
@@ -2454,11 +2647,11 @@ Each of these strategies can be configured individually for each \term{alloc\_ut
 \end{figure}
 \FloatBarrier
 
-For \emph{best fit} (\term{bf}), the VM builds a balanced binary tree of all the free blocks' sizes, and will try to find the smallest one that will accommodate the piece of data and allocate it there. In Figure \ref{fig:allocation-strategy-1}, having a piece of data that requires three blocks would likely end in area 3.
+For \emph{best fit} (\term{bf}), the VM builds a balanced binary tree of all the free blocks' sizes, and will try to find the smallest one that will accommodate the piece of data and allocate it there. In Figure \NamedRef{fig:allocation-strategy-1}, having a piece of data that requires three blocks would likely end in area 3.
 
-\emph{Address order best fit} (\term{aobf}) will work similarly, but the tree instead is based on the addresses of the blocks. So the VM will look for the smallest block available that can accommodate the data, but if many of the same size exist, it will favor picking one that has a lower address. If I have a piece of data that requires three blocks, I'll still likely end up in area 3, but if I need two blocks, this strategy will favor the first \term{mbcs} in Figure \ref{fig:allocation-strategy-1} with area 1 (instead of area 5). This could make the VM have a tendency to favor the same carriers for many allocations.
+\emph{Address order best fit} (\term{aobf}) will work similarly, but the tree instead is based on the addresses of the blocks. So the VM will look for the smallest block available that can accommodate the data, but if many of the same size exist, it will favor picking one that has a lower address. If I have a piece of data that requires three blocks, I'll still likely end up in area 3, but if I need two blocks, this strategy will favor the first \term{mbcs} in Figure \NamedRef{fig:allocation-strategy-1} with area 1 (instead of area 5). This could make the VM have a tendency to favor the same carriers for many allocations.
 
-\emph{Address order first fit} (\term{aoff}) will favor the address order for its search, and as soon as a block fits, \term{aoff} uses it. Where \term{aobf} and bf would both have picked area 3 to allocate four blocks in Figure \ref{fig:allocation-strategy-1}, this one will get area 2 as a first priority given its address is lowest. In Figure \ref{fig:allocation-strategy-2}, if we were to allocate four blocks, we'd favor block 1 to block 3 because its address is lower, whereas \term{bf} would have picked either 3 or 4, and \term{aobf} would have picked 3.
+\emph{Address order first fit} (\term{aoff}) will favor the address order for its search, and as soon as a block fits, \term{aoff} uses it. Where \term{aobf} and bf would both have picked area 3 to allocate four blocks in Figure \NamedRef{fig:allocation-strategy-1}, this one will get area 2 as a first priority given its address is lowest. In Figure \NamedRef{fig:allocation-strategy-2}, if we were to allocate four blocks, we'd favor block 1 to block 3 because its address is lower, whereas \term{bf} would have picked either 3 or 4, and \term{aobf} would have picked 3.
 
 \begin{figure}
   \includegraphics[max height=7cm]{allocation-strategy-2.pdf}%
@@ -2468,7 +2661,7 @@ For \emph{best fit} (\term{bf}), the VM builds a balanced binary tree of all the
 \end{figure}
 \FloatBarrier
 
-\emph{Address order first fit carrier best fit} (\term{aoffcbf}) is a strategy that will first favor a carrier that can accommodate the size and then look for the best fit within that one. So if we were to allocate two blocks in Figure \ref{fig:allocation-strategy-2}, \term{bf} and \term{aobf} would both favor block 5, \term{aoff} would pick block 1. \term{aoffcbf} would pick area 2, because the first \term{mbcs} can accommodate it fine, and area 2 fits it better than area 1.
+\emph{Address order first fit carrier best fit} (\term{aoffcbf}) is a strategy that will first favor a carrier that can accommodate the size and then look for the best fit within that one. So if we were to allocate two blocks in Figure \NamedRef{fig:allocation-strategy-2}, \term{bf} and \term{aobf} would both favor block 5, \term{aoff} would pick block 1. \term{aoffcbf} would pick area 2, because the first \term{mbcs} can accommodate it fine, and area 2 fits it better than area 1.
 
 \emph{Address order first fit carrier address order best fit} (\term{aoffcaobf}) will be similar to \term{aoffcbf}, but if multiple areas within a carrier have the same size, it will favor the one with the smallest address between the two rather than leaving it unspecified.
 
@@ -2619,7 +2812,7 @@ To pin issues to specific pieces of Erlang code, as mentioned earlier, there are
 	\item \otpapp{eflame},\footnote{\href{https://github.com/proger/eflame}{https://github.com/proger/eflame}} the newest kid on the block. It generates flame graphs to show deep call sequences and hot-spots in usage on a given piece of code. It allows one to quickly find issues with a single look at the final result.
 \end{itemize*}
 
-It will be left to the reader to thoroughly read each of these application's documentation. The other approach will be to run \function{recon:proc\_window/3} as introduced in Subsection \ref{subsec:digging-procs}:
+It will be left to the reader to thoroughly read each of these application's documentation. The other approach will be to run \function{recon:proc\_window/3} as introduced in Subsection \NamedRef{subsec:digging-procs}:
 
 \begin{VerbatimEshell}
 1> recon:proc_window(reductions, 3, 500).
@@ -2636,7 +2829,7 @@ It will be left to the reader to thoroughly read each of these application's doc
 
 The reduction count has a direct link to function calls in Erlang, and a high count is usually the synonym of a high amount of CPU usage. 
 
-What's interesting with this function is to try it while a system is already rather busy,\footnote{See Subsection \ref{subsec:global-cpu}} with a relatively short interval. Repeat it many times, and you should hopefully see a pattern emerge where the same processes (or the same \emph{kind} of processes) tend to always come up on top.
+What's interesting with this function is to try it while a system is already rather busy,\footnote{See Subsection \NamedRef{subsec:global-cpu}} with a relatively short interval. Repeat it many times, and you should hopefully see a pattern emerge where the same processes (or the same \emph{kind} of processes) tend to always come up on top.
 
 Using the code locations\footnote{Call \expression{recon:info(PidTerm, location)} or \expression{process\_info(Pid, current\_stacktrace)} to get this information.} and current functions being run, you should be able to identify what kind of code hogs all your schedulers.
 
@@ -2647,7 +2840,7 @@ If nothing seems to stand out through either profiling or checking reduction cou
 
 To find about such cases, the best way around is to use \function{erlang:system\_monitor/2}, and look for \term{long\_gc} and \term{long\_schedule}. The former will show whenever garbage collection ends up doing a lot of work (it takes time!), and the latter will likely catch issues with busy processes, either through NIFs or some other means, that end up making them hard to de-schedule.\footnote{Long garbage collections count towards scheduling time. It is very possible that a lot of your long schedules will be tied to garbage collections depending on your system.}
 
-We've seen how to set such a system monitor In Garbage Collection in \ref{subsubsec:leak-gc}, but here's a different pattern\footnote{If you're on 17.0 or newer versions, the shell functions can be made recursive far more simply by using their named form, but to have the widest compatibility possible with older versions of Erlang, I've let them as is.} I've used before to catch long-running items:
+We've seen how to set such a system monitor In Garbage Collection in \NamedRef{subsubsec:leak-gc}, but here's a different pattern\footnote{If you're on 17.0 or newer versions, the shell functions can be made recursive far more simply by using their named form, but to have the widest compatibility possible with older versions of Erlang, I've let them as is.} I've used before to catch long-running items:
 
 \begin{VerbatimEshell}
 1> F = fun(F) ->
@@ -2775,7 +2968,7 @@ Pid specifications lets the user decide which processes to target. They can be s
 
 The trace patterns represent functions. Functions can be specified in two parts: specifying the modules, functions, and arity, and then with Erlang match specifications\footnote{\href{http://www.erlang.org/doc/apps/erts/match\_spec.html}{http://www.erlang.org/doc/apps/erts/match\_spec.html}} to add constraints to arguments.
 
-What defines whether a specific function call gets traced or not is the intersection of both, as seen in Figure~\ref{fig:tracing-venn}.
+What defines whether a specific function call gets traced or not is the intersection of both, as seen in Figure~\NamedRef{fig:tracing-venn}.
 
 \begin{figure}
   \includegraphics[max height=7cm]{tracing-venn.pdf}%
