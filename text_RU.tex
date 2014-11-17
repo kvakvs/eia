@@ -2359,75 +2359,111 @@ Kernel pid terminated (application_controller)
 \chapter{Утечки памяти}
 \label{chap:memory-leaks}
 
-There are truckloads of ways for an Erlang node to bleed memory. They go from extremely simple to astonishingly hard to figure out (fortunately, the latter type is also rarer), and it's possible you'll never encounter any problem with them.
+%There are truckloads of ways for an Erlang node to bleed memory. They go from extremely simple to astonishingly hard to figure out (fortunately, the latter type is also rarer), and it's possible you'll never encounter any problem with them.
+Для Erlang-узла существует огромное множество причин утечек памяти. Их выявление может оказаться как крайне простым, так и удивительно трудным (к счастью второй вид также и более редкий) и вполне вероятно, вы никогда не встретите таких проблем.
 
-You will find out about memory leaks in two ways:
+%You will find out about memory leaks in two ways:
+Об утечках памяти можно узнать двумя способами:
 
 \begin{enumerate*}
-	\item A crash dump (see Chapter \NamedRef{chap:crash-dumps});
-	\item By finding a worrisome trend in the data you are monitoring. 
+%	\item A crash dump (see Chapter \NamedRef{chap:crash-dumps});
+	\item Аварийный дамп умершего узла (смотрите главу \NamedRef{chap:crash-dumps});
+%	\item By finding a worrisome trend in the data you are monitoring. 
+	\item Если вам удалось найти подозрительную тенденцию в изменении цифр данных, которые вы мониторите.
 \end{enumerate*}
 
-This chapter will mostly focus on the latter kind of leak, because they're easier to investigate and see grow in real time. We will focus on finding what is growing on the node and common remediation options, handling binary leaks (they're a special case), and detecting memory fragmentation. 
-\section{Common Sources of Leaks}
+%This chapter will mostly focus on the latter kind of leak, because they're easier to investigate and see grow in real time. We will focus on finding what is growing on the node and common remediation options, handling binary leaks (they're a special case), and detecting memory fragmentation. 
+Эта глава в основном сосредоточится на втором виде утечек, потому что их легче расследовать и смотреть, как они растут в реальном времени. Мы сосредоточимся на поиске того, что растёт на данном узле, обычные способы оказания первой помощи, что делать с утечками бинарных данных (они являются особым случаем), и обнаружение фрагментации памяти.
 
-Whenever someone calls for help saying "oh no, my nodes are crashing", the first step is always to ask for data. Interesting questions to ask and pieces of data to consider are:
 
-\begin{itemize*}
-	\item Do you have a crash dump and is it complaining about memory specifically? If not, the issue may be unrelated. If so, go dig into it, it's full of data.
-	\item Are the crashes cyclical? How predictable are they? What else tends to happen at around the same time and could it be related?
-	\item Do crashes coincide with peaks in load on your systems, or do they seem to happen at more or less any time? Crashes that happen especially \emph{during} peak times are often due to bad overload management (see Chapter \NamedRef{chap:overload}). Crashes that happen at any time, even when load goes down following a peak are more likely to be actual memory issues.
-\end{itemize*}
+%\section{Common Sources of Leaks}
+\section{Общие источники утечек}
 
-If all of this seems to point towards a memory leak, install one of the metrics libraries mentioned in Chapter \NamedRef{chap:runtime-metrics} and/or \otpapp{recon} and get ready to dive in.\footnote{See Chapter \NamedRef{chap:connecting} if you need help to connect to a running node}
-
-The first thing to look at in any of these cases is trends. Check for all types of memory using \expression{erlang:memory()} or some variant of it you have in a library or metrics system. Check for the following points:
+%Whenever someone calls for help saying "oh no, my nodes are crashing", the first step is always to ask for data. Interesting questions to ask and pieces of data to consider are:
+Когда кто-нибудь зовёт на помощь и говорит: <<О, нет, мои Erlang-узлы постоянно падают>>, первым дело следует попросить больше информации. Интересным будет задавать следующие вопросы и смотреть на такие подсказки:
 
 \begin{itemize*}
-	\item Is any type of memory growing faster than others?
-	\item Is there any type of memory that's taking the majority of the space available?
-	\item Is there any type of memory that never seems to go down, and always up (other than atoms)?
+%	\item Do you have a crash dump and is it complaining about memory specifically? If not, the issue may be unrelated. If so, go dig into it, it's full of data.
+	\item Есть ли у вас аварийный дамп и указывает ли он конкретно на память? Если нет, проблема может быть не связана с памятью. Обязательно копните поглубже, там очень много интересного.
+%	\item Are the crashes cyclical? How predictable are they? What else tends to happen at around the same time and could it be related?
+	\item Являются ли падения циклическими? Насколько легко их предсказать? Что ещё происходит примерно в то же время и может повлиять на проблему?
+%	\item Do crashes coincide with peaks in load on your systems, or do they seem to happen at more or less any time? Crashes that happen especially \emph{during} peak times are often due to bad overload management (see Chapter \NamedRef{chap:overload}). Crashes that happen at any time, even when load goes down following a peak are more likely to be actual memory issues.
+	\item  Совпадают ли аварийные падения с всплесками нагрузки ваших систем, или происходят ли они в разное время? Падения, происходящие особенно \emph{во время} пиковых нагрузок, часто связаны с плохой обработкой ситуаций перегрузки (смотрите главу \NamedRef{chap:overload}). Падения, происходящие в разное время, даже когда нагрузка спадает после пика, могут на самом деле являться проблемами с памятью.
 \end{itemize*}
 
-Many options are available depending on the type of memory that's growing.
+%If all of this seems to point towards a memory leak, install one of the metrics libraries mentioned in Chapter \NamedRef{chap:runtime-metrics} and/or \otpapp{recon} and get ready to dive in.\footnote{See Chapter \NamedRef{chap:connecting} if you need help to connect to a running node}
+Если все признаки указывают на утечку памяти, установите в вашу систему одну из библиотек метрики, которые упоминались в главе \NamedRef{chap:runtime-metrics} и/или \otpapp{recon} и приготовьтесь нырнуть в данные.\footnote{Смотрите главу \NamedRef{chap:connecting} если вам нужны подсказки, как подключиться к работающей Erlang-системе.}.
 
-\subsection{Atom}
+%The first thing to look at in any of these cases is trends. Check for all types of memory using \expression{erlang:memory()} or some variant of it you have in a library or metrics system. Check for the following points:
+Первое, что следует искать в любом из этих случаев --- это тренды (тенденции). Проверяйте все виды памяти, используя вызов \expression{erlang:memory()} или некий аналогичный вариант, который может иметься в библиотеке или системе сбора метрик. Смотрите на следующие моменты:
 
-\emph{Don't use dynamic atoms!} Atoms go in a global table and are cached forever. Look for places where you call \function{erlang:binary\_to\_term/1} and \function{erlang:list\_to\_atom/1}, and consider switching to safer variants (\expression{erlang:binary\_to\_term(Bin, [safe])} and\newline \function{erlang:list\_to\_existing\_atom/1}).
+\begin{itemize*}
+%	\item Is any type of memory growing faster than others?
+	\item Растёт ли один из видов памяти быстрее других?
+%	\item Is there any type of memory that's taking the majority of the space available?
+	\item Занимает ли какой-нибудь тип памяти большую часть доступного пространства?
+%	\item Is there any type of memory that never seems to go down, and always up (other than atoms)?
+	\item Есть ли какой-нибудь тип памяти, который никогда заметно не уменьшает потребление и только растёт вверх (кроме атомов)? Растущий график в форме пилы тоже является тревожным.
+\end{itemize*}
 
-If you use the \otpapp{xmerl} library that ships with Erlang, consider open source alternatives\footnote{I don't dislike \href{https://github.com/paulgray/exml}{exml} or \href{https://github.com/willemdj/erlsom}{erlsom}} or figuring the way to add your own SAX parser that can be safe\footnote{See Ulf Wiger at \href{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}}. 
+%Many options are available depending on the type of memory that's growing.
+Имеется ряд решений зависящих от типа памяти, которая начала расти.
 
-If you do none of this, consider what you do to interact with the node. One specific case that bit me in production was that some of our common tools used random names to connect to nodes remotely, or generated nodes with random names that connected to each other from a central server.\footnote{This is a common approach to figuring out how to connect nodes together: have one or two central nodes with fixed names, and have every other one log to them. Connections will then propagate automatically.} Erlang node names are converted to atoms, so just having this was enough to slowly but surely exhaust space on atom tables. Make sure you generate them from a fixed set, or slowly enough that it won't be a problem in the long run.
+\subsection{Атомы}
 
-\subsection{Binary}
+%\emph{Don't use dynamic atoms!} Atoms go in a global table and are cached forever. Look for places where you call \function{erlang:binary\_to\_term/1} and \function{erlang:list\_to\_atom/1}, and consider switching to safer variants (\expression{erlang:binary\_to\_term(Bin, [safe])} and\newline \function{erlang:list\_to\_existing\_atom/1}).
+\emph{Не создавайте атомы динамически!} Атомы сохраняются в глобальной таблице навсегда. Ищите места, где вы вызываете \function{erlang:binary\_to\_term/1} и \function{erlang:list\_to\_atom/1}, и обдумайте переключение на более безопасные варианты (\expression{erlang:binary\_to\_term(Bin, [safe])} и \function{erlang:list\_to\_existing\_atom/1}). 
 
-See Section \NamedRef{sec:binaries}.
+%If you use the \otpapp{xmerl} library that ships with Erlang, consider open source alternatives\footnote{I don't dislike \href{https://github.com/paulgray/exml}{exml} or \href{https://github.com/willemdj/erlsom}{erlsom}} or figuring the way to add your own SAX parser that can be safe\footnote{See Ulf Wiger at \href{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}}. 
+Если вы использовали стандартное приложение \otpapp{xmerl} в библиотеке Erlang, продумайте возможность перехода на альтернативное решение\footnote{Я не против использования \href{https://github.com/paulgray/exml}{exml} или \href{https://github.com/willemdj/erlsom}{erlsom}} или найти способ добавить собственный SAX-парсер, который мог бы оказаться безопасным\footnote{Смотрите комментарий Ulf Wiger в рассылке \href{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}{http://erlang.org/pipermail/erlang-questions/2013-July/074901.html}}.
 
-\subsection{Code}
+%If you do none of this, consider what you do to interact with the node. One specific case that bit me in production was that some of our common tools used random names to connect to nodes remotely, or generated nodes with random names that connected to each other from a central server.\footnote{This is a common approach to figuring out how to connect nodes together: have one or two central nodes with fixed names, and have every other one log to them. Connections will then propagate automatically.} Erlang node names are converted to atoms, so just having this was enough to slowly but surely exhaust space on atom tables. Make sure you generate them from a fixed set, or slowly enough that it won't be a problem in the long run.
+Если вы не делали ни того ни другого, задумайтесь, как вы взаимодействуете с вашим узлом. Однажны на реальной производственной системе оказалось так, что один из инструментов для подключения к узлам использовал случайные имена, или создавал узлы со случайными именами, которые подключались друг к другу с центрального сервера\footnote{Это общепринятый подход к выяснению того, как узлы подключаются друг к другу: держите два центральных узла с известными неизменными именами и остальные к ним подключаются. Тогда взаимные переподключения узлов произойдут автоматически.}. Имена узлов Erlang превращаются в атомы, так что этого оказалось достаточно, чтобы медленно и уверенно заполнить пространство таблицы атомов. Убедитесь, что вы выбираете <<случайные>> атомы из некоторого фиксированного набора, или создаёте их достаточно медленно так, чтобы это не оказалось проблемой через какое-то время.
 
-The code on an Erlang node is loaded in memory in its own area, and sits there until it is garbage collected. Only two copies of a module can coexist at one time, so looking for very large modules should be easy-ish.
 
-If none of them stand out, look for code compiled with HiPE\footnote{\href{http://www.erlang.org/doc/man/HiPE\_app.html}{http://www.erlang.org/doc/man/HiPE\_app.html}}. HiPE code, unlike regular BEAM code, is native code and cannot be garbage collected from the VM when new versions are loaded. Memory can accumulate, usually very slowly, if many or large modules are native-compiled and loaded at run time.
+\subsection{Двоичные данные}
 
-Alternatively, you may look for weird modules you didn't load yourself on the node and panic if someone got access to your system!
+Смотрите отдельную посвящённую им секцию \NamedRef{sec:binaries}.
+
+
+\subsection{Код}
+
+%The code on an Erlang node is loaded in memory in its own area, and sits there until it is garbage collected. Only two copies of a module can coexist at one time, so looking for very large modules should be easy-ish.
+Код на Erlang-узлах загружается в свою особенную зону памяти, и остаётся там до тех пор, пока сборщик мусора его не освободит. Только две копии каждого модуля могут существовать одновременно в памяти, так что поиск очень больших модулей должен быть относительно лёгким.
+
+%If none of them stand out, look for code compiled with HiPE\footnote{\href{http://www.erlang.org/doc/man/HiPE\_app.html}{http://www.erlang.org/doc/man/HiPE\_app.html}}. HiPE code, unlike regular BEAM code, is native code and cannot be garbage collected from the VM when new versions are loaded. Memory can accumulate, usually very slowly, if many or large modules are native-compiled and loaded at run time.
+Если никакой модуль не выделяется из общего ряда, поищите код, скомпилированный с включенным HiPE\footnote{\href{http://www.erlang.org/doc/man/HiPE\_app.html}{http://www.erlang.org/doc/man/HiPE\_app.html}}. HiPE-код, в отличие от обычного BEAM-кода, является машинным кодом и не может быть подхвачен сборщиком мусора, когда загружаются новые версии. Память может накапливаться, обычно медленно, если много или большие HiPE-модули загружаются во время работы программы.
+
+%Alternatively, you may look for weird modules you didn't load yourself on the node and panic if someone got access to your system!
+Как вариант, можно поискать странные модули, которые вы не загружали на узел и устроить панику, если кто-то смог получить доступ к вашей системе.
+
 
 \subsection{ETS}
 
-ETS tables are never garbage collected, and will maintain their memory usage as long as records will be left undeleted in a table. Only removing records manually (or deleting the table) will reclaim memory.
+%ETS tables are never garbage collected, and will maintain their memory usage as long as records will be left undeleted in a table. Only removing records manually (or deleting the table) will reclaim memory.
+ETS-таблицы никогда не подвергаются сборке мусора и будут сохранять имеющийся расход памяти так долго, пока в них не удаляются записи. Только удаление записей вручную (или очистка/удаление всей таблицы) может вернуть память.
 
-In the rare cases you're actually leaking ETS data, call the undocumented \function{ets:i()} function in the shell. It will print out information regarding number of entries (\expression{size}) and how much memory they take (\expression{mem}). Figure out if anything is bad.
+%In the rare cases you're actually leaking ETS data, call the undocumented \function{ets:i()} function in the shell. It will print out information regarding number of entries (\expression{size}) and how much memory they take (\expression{mem}). Figure out if anything is bad.
+В редких случаях, когда у вас действительно потекла ETS-таблица, используйте недокументированную функцию \function{ets:i()} в интерактивном интерпретаторе. Она распечатает информацию о количестве записей (\expression{size}) и сколько памяти они занимают (\expression{mem}). Попробуйте использовать эти данные для поиска чего-нибудь подозрительного.
 
-It's entirely possible all the data there is legit, and you're facing the difficult problem of needing to shard your data set and distribute it over many nodes. This is out of scope for this book, so best of luck to you. You can look into compression of your tables if you need to buy time, however.\footnote{See the \href{http://www.erlang.org/doc/man/ets.html\#new-2}{\expression{compressed} option for \function{ets:new/2}}}
+%It's entirely possible all the data there is legit, and you're facing the difficult problem of needing to shard your data set and distribute it over many nodes. This is out of scope for this book, so best of luck to you. You can look into compression of your tables if you need to buy time, however.\footnote{See the \href{http://www.erlang.org/doc/man/ets.html\#new-2}{\expression{compressed} option for \function{ets:new/2}}}
+Совершенно возможен случай, когда все данные в таблице находятся честно и согласно алгоритму вашей программы, и вы столкнулись с проблемой необходимости разделения таблицы на секции (\emph{sharding}) и распределения на разные узлы. Это выходит за пределы книги, так что удачи вам. Однако стоит посмотреть на опцию сжатия таблиц, если вам нужно выиграть время\footnote{Смотрите опцию \href{http://www.erlang.org/doc/man/ets.html\#new-2}{\expression{compressed} для \function{ets:new/2}}}.
 
-\subsection{Processes}
 
-There are a lot of different ways in which process memory can grow. Most interesting cases will be related to a few common cases: process leaks (as in, you're leaking processes), specific processes leaking their memory, and so on. It's possible there's more than one cause, so multiple metrics are worth investigating. Note that the process count itself is skipped and has been covered before.
+\subsection{Процессы}
 
-\subsubsection{Links and Monitors}
+%There are a lot of different ways in which process memory can grow. Most interesting cases will be related to a few common cases: process leaks (as in, you're leaking processes), specific processes leaking their memory, and so on. It's possible there's more than one cause, so multiple metrics are worth investigating. Note that the process count itself is skipped and has been covered before.
+Есть множество разных причин роста памяти процессов. Самые интересные случаи относятся к нескольким самым частым причинам: утечки процессов (то есть, течёт не память, а теряются целые процессы), утечки памяти в особых процессах, и так далее. Возможно в вашем случае будет более одной причины одновременно, так что смотрите сразу на многие метрики. Заметьте, что счёт процессов был описан ранее и поэтому на нём здесь не останавливаемся.
 
-Is the global process count indicative of a leak? If so, you may need to investigate unlinked processes, or peek inside supervisors' children lists to see what may be weird-looking.
 
-Finding unlinked (and unmonitored) processes is easy to do with a few basic commands:
+%\subsubsection{Links and Monitors}
+\subsubsection{Связи и мониторы}
+
+%Is the global process count indicative of a leak? If so, you may need to investigate unlinked processes, or peek inside supervisors' children lists to see what may be weird-looking.
+Является ли глобальное количество процессов индикатором утечки? Если так, то вам может понадобиться рассмотреть процессы, с которыми была разорвана связь (\emph{unlinked}), или заглянуть в списки дочерних процессов наблюдателей на случай, если они выглядят необычно.
+
+%Finding unlinked (and unmonitored) processes is easy to do with a few basic commands:
+Поиск процессов, с которыми была разорвана связь и мониторинг --- это несложная задача при помощи нескольких простых команд.
 
 \begin{VerbatimEshell}
 1> [P || P <- processes(),
@@ -2435,7 +2471,8 @@ Finding unlinked (and unmonitored) processes is easy to do with a few basic comm
          []==Ls, []==Ms].
 \end{VerbatimEshell}
 
-This will return a list of processes with neither. For supervisors, just fetching \newline \expression{supervisor:count\_children(SupervisorPidOrName)} and seeing what looks normal can be a good pointer.
+%This will return a list of processes with neither. For supervisors, just fetching \newline \expression{supervisor:count\_children(SupervisorPidOrName)} and seeing what looks normal can be a good pointer.
+Эта команда вернёт список процессов не имеющих ни того ни другого. Для наблюдателей хорошей подсказкой может быть простая выборка с помощью \expression{supervisor:count\_children(SupervisorPidOrName)} и проверка на глаз: выглядит ли список хорошо или подозрительно.
 
 
 \subsubsection{Memory Used}
