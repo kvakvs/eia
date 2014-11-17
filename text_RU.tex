@@ -2280,28 +2280,38 @@ Kernel pid terminated (application_controller)
 %In any case, the crash dump will help figure out what the problem was after the fact. The process mailboxes and individual heaps are usually good indicators of issues. If you're running out of memory without any mailbox being outrageously large, look at the processes heap and stack sizes as returned by the recon script.
 В любом случае, аварийный дамп поможет выяснить, что случилось, по факту когда программа завершилась. Почтовые ящики процессов --- это отдельные кучи и обычно являются хорошими индикаторами возникновения проблем. Если у вас заканчивается память при том, что ни один почтовый ящик не вырос до заоблачных высот, посмотрите на кучи процессов и размеры стеков, которые возвращает скрипт recon.
 
-In case of large outliers at the top, you know some restricted set of processes may be eating up most of your node's memory. In case they're all more or less equal, see if the amount of memory reported sounds like a lot.
+%In case of large outliers at the top, you know some restricted set of processes may be eating up most of your node's memory. In case they're all more or less equal, see if the amount of memory reported sounds like a lot.
+Если у вас имеются резко выделяющиеся числа в отчёте, то вы сможете составить некоторый ограниченный набор процессов, которые подозреваются в перерасходе памяти. В случае же если все они более менее равны, посмотрите на сообщаемое количество использованной памяти, вдруг она покажет большие числа.
 
-If it looks more or less reasonable, head towards the "Memory" section of the dump and check if a type (ETS or Binary, for example) seems to be fairly large. They may point towards resource leaks you hadn't expected.
+%If it looks more or less reasonable, head towards the "Memory" section of the dump and check if a type (ETS or Binary, for example) seems to be fairly large. They may point towards resource leaks you hadn't expected.
+Если всё выглядит более-менее разумно, перейдите в секцию с отчётом о памяти (<<Memory>>) и проверьте, если один из типов памяти (ETS или двоичная куча, например) выглядит неоправданно большим. Они могут указывать на утечки ресурсов, которых вы не ожидали.
 
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
-
-\begin{enumerate}
-	\item How can you choose where a crash dump will be generated?
-	\item What are common avenues to explore if the crash dump shows that the node ran out of memory?
-	\item What should you look for if the process count is suspiciously low?
-	\item If you find the node died with a process having a lot of memory, what could you do to find out which one it was?\end{enumerate}
-
-\subsection*{Hands-On}
-
-Using the analysis of a crash dump in Section \NamedRef{sec:crashdump-general-view}:
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item What are specific outliers that could point to an issue?
-	\item Does it look like repeated errors are the issue? If not, what could it be? 
+%	\item How can you choose where a crash dump will be generated?
+	\item Как можно выбрать директорию, в которой будет создан аварийный дамп?
+%	\item What are common avenues to explore if the crash dump shows that the node ran out of memory?
+	\item Назовите что следует искать в дампе, когда причиной смерти узла был назван недостаток памяти?
+%	\item What should you look for if the process count is suspiciously low?
+	\item Что следует искать, если количество процессов необычно мало?
+%	\item If you find the node died with a process having a lot of memory, what could you do to find out which one it was?
+	\item Как вы узнали, причиной смерти узла стало то, что один из процессов начал использовать слишком много памяти. Что можно сделать, чтобы найти этот процесс?
+\end{enumerate}
+
+\subsection*{\HandsOnTitle{}}
+
+%Using the analysis of a crash dump in Section \NamedRef{sec:crashdump-general-view}:
+Используя анализ аварийного дампа в секции \NamedRef{sec:crashdump-general-view}:
+
+\begin{enumerate}
+%	\item What are specific outliers that could point to an issue?
+	\item Какие числа являются необычно выделяющимися и могут указывать на возможные причины?
+%	\item Does it look like repeated errors are the issue? If not, what could it be? 
+	\item Могли ли повторяющиеся ошибки стать проблемой? Если нет, что же тогда могло?
 \end{enumerate}
 
 %%%
@@ -2346,7 +2356,7 @@ Using the analysis of a crash dump in Section \NamedRef{sec:crashdump-general-vi
 %%%
 %%%
 
-\chapter{Memory Leaks}
+\chapter{Утечки памяти}
 \label{chap:memory-leaks}
 
 There are truckloads of ways for an Erlang node to bleed memory. They go from extremely simple to astonishingly hard to figure out (fortunately, the latter type is also rarer), and it's possible you'll never encounter any problem with them.
