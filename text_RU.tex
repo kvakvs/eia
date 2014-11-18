@@ -1936,7 +1936,7 @@ Attaching to /tmp/erl_pipe (^D to exit)
 Это показывает нам, что некоторые порты выполняют лишь приём и потребляют очень много байтов. Затем можно использовать \function{recon:port\_info("\#Port<0.6821166>")}, чтобы вкопаться поглубже и найти, кто владеет сокетом, и что с ним происходит.
 
 %Or in any other case, we can look at what is sending the most data within any time window\footnote{See the explanations for the \function{recon:proc\_window/3} in the preceding subsection} with the \function{recon:inet\_window(Attribute, Count, Milliseconds)} function:
-Или для любого другого случая, можно посмотреть на тех, кто посылает больше всего данных в течение интервала времени\footnote{Смотрите пояснения к \function{recon:proc\_window/3} в предыдущей подсекции.} с помощью функции \function{recon:inet\_window(Attribute, Count, Milliseconds)}:
+Или для любого другого случая, можно посмотреть на тех, кто посылает больше всего данных в течение интервала времени\footnote{Смотрите пояснения к \function{recon:proc\_window/3} в предыдущей подсекции.} с помощью функции \function{recon:inet\_window(Атрибут, Количество, Миллисекунды)}:
 
 \begin{VerbatimEshell}
 3> recon:inet_window(send_oct, 3, 5000).
@@ -2475,11 +2475,14 @@ ETS-таблицы никогда не подвергаются сборке м�
 Эта команда вернёт список процессов не имеющих ни того ни другого. Для наблюдателей хорошей подсказкой может быть простая выборка с помощью \expression{supervisor:count\_children(SupervisorPidOrName)} и проверка на глаз: выглядит ли список хорошо или подозрительно.
 
 
-\subsubsection{Memory Used}
+%\subsubsection{Memory Used}
+\subsubsection{Использованная память}
 
-The per-process memory model is briefly described in Subsection \NamedRef{subsec:memory-process-level}, but generally speaking, you can find which individual processes use the most memory by looking for their \term{memory} attribute. You can look things up either as absolute terms or as a sliding window.
+%The per-process memory model is briefly described in Subsection \NamedRef{subsec:memory-process-level}, but generally speaking, you can find which individual processes use the most memory by looking for their \term{memory} attribute. You can look things up either as absolute terms or as a sliding window.
+Модель памяти с отдельной кучей для каждого процесса коротко описана в подсекции \NamedRef{subsec:memory-process-level}, но в общих словах вы можете найти конкретный процесс, использующий больше всех памяти, если посмотрите на атрибут \term{memory}. Можно смотреть за абсолютными значениями или за их изменением в скользящем интервале.
 
-For memory leaks, unless you're in a predictable fast increase, absolute values are usually those worth digging into first:
+%For memory leaks, unless you're in a predictable fast increase, absolute values are usually those worth digging into first:
+Для утечек памяти, если только у вас нет предсказуемого быстрого роста, стоит копнуть первым делом абсолютные значения:
 
 \begin{VerbatimEshell}
 1> recon:proc_count(memory, 3).
@@ -2497,16 +2500,22 @@ For memory leaks, unless you're in a predictable fast increase, absolute values 
    {initial_call,{proc_lib,init_p,5}}]}]
 \end{VerbatimEshell}
 
-Attributes that may be interesting to check other than \term{memory} may be any other fields in Subsection \NamedRef{subsec:digging-procs}, including \term{message\_queue\_len}, but \term{memory} will usually encompass all other types.
+%Attributes that may be interesting to check other than \term{memory} may be any other fields in Subsection \NamedRef{subsec:digging-procs}, including \term{message\_queue\_len}, but \term{memory} will usually encompass all other types.
+Атрибуты, которые могут оказаться интересными для анализа, кроме \term{memory}, --- это любые другие поля описанные в подсекции \NamedRef{subsec:digging-procs}, включая \term{message\_queue\_len}, но счётчик \term{memory} обычно включает в себя все остальные типы памяти.
 
-\subsubsection{Garbage Collections}
+
+%\subsubsection{Garbage Collections}
+\subsubsection{Утечки сборщика мусора}
 \label{subsubsec:leak-gc}
 
-It is very well possible that a process uses lots of memory, but only for short periods of time. For long-lived nodes with a large overhead for operations, this is usually not a problem, but whenever memory starts being scarce, such spiky behaviour might be something you want to get rid of.
+%It is very well possible that a process uses lots of memory, but only for short periods of time. For long-lived nodes with a large overhead for operations, this is usually not a problem, but whenever memory starts being scarce, such spiky behaviour might be something you want to get rid of.
+Очень возможна ситуация, что процесс использует много памяти, но лишь в течение коротких промежутков времени. Для долгоживущих узлов с большими накладными расходами на выполнение работы это обычно не является проблемой, но когда ресурсы памяти становятся ограничены, то вы можете начать обдумывать план избавления от такого поведения.
 
-Monitoring all garbage collections in real-time from the shell would be costly. Instead, setting up Erlang's system monitor\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}} might be the best way to go at it.
+%Monitoring all garbage collections in real-time from the shell would be costly. Instead, setting up Erlang's system monitor\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}} might be the best way to go at it.
+Мониторинг всех сборок мусора в реальном времени из консоли интерпретатора может оказаться дорогим удовольствием. Вместо этого лучшим из решений может оказаться установка системного монитора Erlang\footnote{\href{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}{http://www.erlang.org/doc/man/erlang.html\#system\_monitor-2}}.
 
-Erlang's system monitor will allow you to track information such as long garbage collection periods and large process heaps, among other things. A monitor can temporarily be set up as follows:
+%Erlang's system monitor will allow you to track information such as long garbage collection periods and large process heaps, among other things. A monitor can temporarily be set up as follows:
+Системный монитор позволит вам отслеживать такую информацию, как долгие периоды сборки мусора и большие кучи процессов, а также и другие интересные вещи. Монитор можно временно запустить такими командами:
 
 \begin{VerbatimEshell}
 1> erlang:system_monitor().
@@ -2528,29 +2537,42 @@ Shell got {monitor,<4683.31798.0>,long_gc,
 undefined
 \end{VerbatimEshell}
 
-The first command checks that nothing (or nobody else) is using a system monitor yet — you don't want to take this away from an existing application or coworker.
+%The first command checks that nothing (or nobody else) is using a system monitor yet — you don't want to take this away from an existing application or coworker.
+Первая команда проверяет, что ничего (или никто) ещё не начал использовать системный монитор --- вам не хотелось бы забрать его у существующего приложения или испортить работу сотруднику.
 
-The second command will be notified every time a garbage collection takes over 500 milliseconds. The result is flushed in the third command. Feel free to also check for \expression{\{large\_heap, NumWords\}} if you want to monitor such sizes.
-Be careful to start with large values at first if you're unsure. You don't want to flood your process' mailbox with a bunch of heaps that are 1-word large or more, for example.
+%The second command will be notified every time a garbage collection takes over 500 milliseconds. The result is flushed in the third command. Feel free to also check for \expression{\{large\_heap, NumWords\}} if you want to monitor such sizes.
+Вторая команда включает режим отправки уведомлений каждый раз, когда сборка мусора занимает дольше 500 миллисекунд. Результат можно увидеть с помощью третьей команды (которая принимает сообщения, пришедшие в процесс интерактивного интерпретатора). Попробуйте также добавить \expression{\{large\_heap, КоличествоСлов\}}, если вам интересна ситуация роста размера кучи более заданного количества слов.
+%Be careful to start with large values at first if you're unsure. You don't want to flood your process' mailbox with a bunch of heaps that are 1-word large or more, for example.
+Будьте осторожнее с запуском и пробуйте сначала большие значения, если не уверены в том, какие числа выбрать. Вы не хотите затопить почтовый ящик своего процесса сообщениями о том, что все кучи на узле имеют размер больше 1 слова.
 
-Command 5 unsets the system monitor (exiting or killing the monitor process also frees it up), and command 6 validates that everything worked.
+%Command 5 unsets the system monitor (exiting or killing the monitor process also frees it up), and command 6 validates that everything worked.
+Команда 5 отключает системный монитор (выход или смерть процесса монитора тоже его отключит) и команда 6 проверяет, что всё сработало.
 
-You can then find out if such monitoring messages tend to coincide with the memory increases that seem to result in leaks or overuses, and try to catch culprits before things are too bad. Quickly reacting and digging into the process (possibly with \function{recon:info/1}) may help find out what's wrong with the application.
+%You can then find out if such monitoring messages tend to coincide with the memory increases that seem to result in leaks or overuses, and try to catch culprits before things are too bad. Quickly reacting and digging into the process (possibly with \function{recon:info/1}) may help find out what's wrong with the application.
+Вы можете затем выяснить, совпадают ли подобные сообщения монитора с увеличениями размеров памяти, которые по видимости приводят к утечкам или перерасходу, и попробовать найти причину до того, как всё станет слишком плохо. Быстрое реагирование и раскопки информации по процессу (возможно с помощью \function{recon:info/1}) могут помочь выяснить, что не так с приложением.
 
-\subsection{Nothing in Particular}
 
-If nothing seems to stand out in the preceding material, binary leaks (Section \NamedRef{sec:binaries}) and memory fragmentation (Section \NamedRef{sec:memory-fragmentation}) may be the culprits. If nothing there fits either, it's possible a C driver, NIF, or even the VM itself is leaking. Of course, a possible scenario is that load on the node and memory usage were proportional, and nothing specifically ended up being leaky or modified. The system just needs more resources or nodes.
+\subsection{Ничего особенного}
+%\subsection{Nothing in Particular}
 
-\section{Binaries}
+%If nothing seems to stand out in the preceding material, binary leaks (Section \NamedRef{sec:binaries}) and memory fragmentation (Section \NamedRef{sec:memory-fragmentation}) may be the culprits. If nothing there fits either, it's possible a C driver, NIF, or even the VM itself is leaking. Of course, a possible scenario is that load on the node and memory usage were proportional, and nothing specifically ended up being leaky or modified. The system just needs more resources or nodes.
+Если ничего из предыдущего материала не привлекло вашего внимания, то причиной могут быть утечки памяти двоичных данных (секция \NamedRef{sec:binaries}) и фрагментация памяти (секция \NamedRef{sec:memory-fragmentation}). Если даже это подозрение не оправдалось, то вполне возможно причиной является С-драйвер, встроенная (NIF) функция или даже сама виртуальная машина. Конечно, возможным сценарием может быть и то, что нагрузка на узле и расход памяти были пропорциональны, и ничего на самом деле не утекало, а расходовалось в результате нормальной работы. Системе просто требуются больше памяти или новые узлы.
+
+%\section{Binaries}
+\section{Двоичные данные}
 \label{sec:binaries}
 
-Erlang's binaries are of two main types: ProcBins and Refc binaries\footnote{\href{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}}. Binaries up to 64 bytes are allocated directly on the process's heap, and their entire life cycle is spent in there. Binaries bigger than that get allocated in a global heap for binaries only, and each process to use one holds a local reference to it in its local heap. These binaries are reference-counted, and the deallocation will occur only once all references are garbage-collected from all processes that pointed to a specific binary.
+%Erlang's binaries are of two main types: ProcBins and Refc binaries\footnote{\href{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}}. Binaries up to 64 bytes are allocated directly on the process's heap, and their entire life cycle is spent in there. Binaries bigger than that get allocated in a global heap for binaries only, and each process to use one holds a local reference to it in its local heap. These binaries are reference-counted, and the deallocation will occur only once all references are garbage-collected from all processes that pointed to a specific binary.
+Двоичные данные в Erlang на низком уровне делятся на два вида: значения на куче процесса (\emph{ProcBin}) и большие данные в двоичной куче, освобождаемые автоматически с подсчётом ссылок (\emph{Refc})\footnote{\href{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}{http://www.erlang.org/doc/efficiency\_guide/binaryhandling.html\#id65798}}. Двоичные значения короче 64 байтов располагаются непосредственно в куче процесса и весь их жизненный цикл протекает там же. Двоичные значения большого размера размещаются в глобальной куче, предназначенной только для двоичных данных, и каждый процесс, который использует блок данных, хранит ссылку на него в своей локальной куче. Эти блоки данных освобождаются автоматически только тогда, когда все ссылки на них очищены сборщиком мусора во всех процессах, которые когда-либо ссылались на это значение.
 
-In 99\% of the cases, this mechanism works entirely fine. In some cases, however, the process will either:
+%In 99\% of the cases, this mechanism works entirely fine. In some cases, however, the process will either:
+Этот механизм работает совершенно удовлетворительно в 99\% случаев. Однако в некоторых ситуациях процесс может:
 
 \begin{enumerate*}
-	\item do too little work to warrant allocations and garbage collection;
-         \item eventually grow a large stack or heap with various data structures, collect them, then get to work with a lot of refc binaries. Filling the heap again with binaries (even though a virtual heap is used to account for the refc binaries' real size) may take a lot of time, giving long delays between garbage collections.
+%	\item do too little work to warrant allocations and garbage collection;
+	\item выполнять слишком мало работы, чтобы оправдать выделение памяти и сборку мусора; 
+%	\item eventually grow a large stack or heap with various data structures, collect them, then get to work with a lot of refc binaries. Filling the heap again with binaries (even though a virtual heap is used to account for the refc binaries' real size) may take a lot of time, giving long delays between garbage collections.
+	\item вырастить большой стек или кучу с разными структурами данных, собрать их сборщиком, и затем заняться работой с большими двоичными данными. Повторное заполнение кучи такими блоками данных (даже несмотря на то, что для учёта реального размера таких блоков используется виртуальная куча) может занять долгое время, давая большие задержки между сборками мусора, соответственно и освобождение этой памяти будет отложено на будущее.
 \end{enumerate*}
 
 \subsection{Detecting Leaks}
