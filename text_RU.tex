@@ -2575,11 +2575,14 @@ undefined
 	\item вырастить большой стек или кучу с разными структурами данных, собрать их сборщиком, и затем заняться работой с большими двоичными данными. Повторное заполнение кучи такими блоками данных (даже несмотря на то, что для учёта реального размера таких блоков используется виртуальная куча) может занять долгое время, давая большие задержки между сборками мусора, соответственно и освобождение этой памяти будет отложено на будущее.
 \end{enumerate*}
 
-\subsection{Detecting Leaks}
+%\subsection{Detecting Leaks}
+\subsection{Обнаружение утечек}
 
-Detecting leaks for reference-counted binaries is easy enough: take a measure of all of each process' list of binary references (using the \expression{binary} attribute), force a global garbage collection, take another snapshot, and calculate the difference.
+%Detecting leaks for reference-counted binaries is easy enough: take a measure of all of each process' list of binary references (using the \expression{binary} attribute), force a global garbage collection, take another snapshot, and calculate the difference.
+Обнаружить утечку блоков двоичных данных, которые освобождаются по счётчику ссылок (\emph{refc}), довольно просто: измерьте все ссылки на двоичные данные во всех процессах (используя атрибут \expression{binary}), выполните глобальную сборку мусора, сделайте снимок ещё раз и подсчитайте разницу.
 
-This can be done directly with \function{recon:bin\_leak(Max)} and looking at the node's total memory before and after the call:
+%This can be done directly with \function{recon:bin\_leak(Max)} and looking at the node's total memory before and after the call:
+Это можно непосредственно выполнить с помощью функции \function{recon:bin\_leak(Количество)} и затем сравнить общую память на узле до и после вызова:
 
 \begin{VerbatimEshell}
 1> recon:bin_leak(5).
@@ -2600,13 +2603,17 @@ This can be done directly with \function{recon:bin\_leak(Max)} and looking at th
    {initial_call,{proc_lib,init_p,5}}]}]
 \end{VerbatimEshell}
 
-This will show how many individual binaries were held and then freed by each process as a delta. The value \expression{-5580} means there were 5580 fewer refc binaries after the call than before.
+%This will show how many individual binaries were held and then freed by each process as a delta. The value \expression{-5580} means there were 5580 fewer refc binaries after the call than before.
+Это покажет нам, сколько отдельных блоков двоичных данных были заняты и затем освобождены каждым процессов в виде разности. Значение \expression{-5580} означает, что после вызова стало на 5580 меньше блоков двоичных данных (\emph{refc}), счётчики ссылок которых обнулились после первой сборки мусора.
 
-It is normal to have a given amount of them stored at any point in time, and not all numbers are a sign that something is bad. If you see the memory used by the VM go down drastically after running this call, you may have had a lot of idling refc binaries.
+%It is normal to have a given amount of them stored at any point in time, and not all numbers are a sign that something is bad. If you see the memory used by the VM go down drastically after running this call, you may have had a lot of idling refc binaries.
+Вполне обычная ситуация иметь некоторое их количество в любой момент времени, и не любое уменьшение их количества указывает на наличие проблем. Если вы увидите, что использованная виртуальной машиной память сильно уменьшилась после вызова этой команты, у вас было значительное количество блоков двоичных данных, ссылки на которые удерживались <<спящими>> процессами.
 
-Similarly, if you instead see some processes hold impressively large numbers of them\footnote{We've seen some processes hold hundreds of thousands of them during leak investigations at Heroku!}, that might be a good sign you have a problem.
+%Similarly, if you instead see some processes hold impressively large numbers of them\footnote{We've seen some processes hold hundreds of thousands of them during leak investigations at Heroku!}, that might be a good sign you have a problem.
+Подобно этому, если вы увидите, что некоторые процессы удерживают впечатляюще большие их количества\footnote{Во время наших расследований утечек памяти в Heroku мы видели процессы, удерживавшие сотни тысяч блоков памяти!}, это может быть верным знаком наличия у вас проблемы.
 
-You can further validate the top consumers in total binary memory by using the special \expression{binary\_memory} attribute supported in \otpapp{recon}:
+%You can further validate the top consumers in total binary memory by using the special \expression{binary\_memory} attribute supported in \otpapp{recon}:
+Вы можете продолжить поиск самых активных пользователей блоков двоичной памяти, используя специальный атрибут \expression{binary\_memory}, который поддерживается в \otpapp{recon}:
 
 \begin{VerbatimEshell}
 1> recon:proc_count(binary_memory, 3).
@@ -2622,132 +2629,199 @@ You can further validate the top consumers in total binary memory by using the s
    {initial_call,{proc_lib,init_p,5}}]}]
 \end{VerbatimEshell}
 
-This will return the \var{N} top processes sorted by the amount of memory the refc binaries reference to hold, and can help point to specific processes that hold a few large binaries, instead of their raw amount. You may want to try running this function \emph{before} \function{recon:bin\_leak/1}, given the latter garbage collects the entire node first.
+%This will return the \var{N} top processes sorted by the amount of memory the refc binaries reference to hold, and can help point to specific processes that hold a few large binaries, instead of their raw amount. You may want to try running this function \emph{before} \function{recon:bin\_leak/1}, given the latter garbage collects the entire node first.
+Эта команда вернёт первые \var{N} процессов, отсортированные по количеству памяти, которую удерживают refc-блоки двоичных данных, и может помочь указать на конкретные процессы, владеющие небольшим количеством особо больших блоков, чего нельзя было бы увидеть, если бы вы анализировали только их количество. Вы можете решить выполнить эту функцию \emph{до} \function{recon:bin\_leak/1}, поскольку она соберёт мусор на всём узле и это повлияет на результаты.
 
-\subsection{Fixing Leaks}
 
-Once you've established you've got a binary memory leak using \function{recon:bin\_leak(Max)}, it should be simple enough to look at the top processes and see what they are and what kind of work they do.
+%\subsection{Fixing Leaks}
+\subsection{Исправляем утечки}
 
-Generally, refc binaries memory leaks can be solved in a few different ways, depending on the source:
+%Once you've established you've got a binary memory leak using \function{recon:bin\_leak(Max)}, it should be simple enough to look at the top processes and see what they are and what kind of work they do.
+Когда вы установили факт, что у вас течёт память двоичных данных (\emph{refc}) с помощью \function{recon:bin\_leak(Количество)}, будет несложно посмотреть первые из процессов в списке и разобраться, кто они и какую работу выполняют.
+
+%Generally, refc binaries memory leaks can be solved in a few different ways, depending on the source:
+В общих словах, утечки памяти двоичных данных решаются несколькими способами в зависимости от источника проблем:
 
 \begin{itemize*}
-	\item call garbage collection manually at given intervals (icky, but somewhat efficient);
-	\item stop using binaries (often not desirable);
-	\item use \function{binary:copy/1-2}\footnote{\href{http://www.erlang.org/doc/man/binary.html\#copy-1}{http://www.erlang.org/doc/man/binary.html\#copy-1}} if keeping only a small fragment (usually less than 64 bytes) of a larger binary;\footnote{It might be worth copying even a larger fragment of a refc binary. For example, copying 10 megabytes off a 2 gigabytes binary should be worth the short-term overhead if it allows the 2 gigabytes binary to be garbage-collected while keeping the smaller fragment longer.}
-	\item move work that involves larger binaries to temporary one-off processes that will die when they're done (a lesser form of manual GC!);
-	\item or add hibernation calls when appropriate (possibly the cleanest solution for inactive processes).
+%	\item call garbage collection manually at given intervals (icky, but somewhat efficient);
+	\item вызывать сборку мусора вручную с заданной периодичностью (неуклюжее решение, но в целом довольно эффективное);
+%	\item stop using binaries (often not desirable);
+	\item перестать пользоваться большими двоичными данными в целом (часто неподходящее решение);
+%	\item use \function{binary:copy/1-2}\footnote{\href{http://www.erlang.org/doc/man/binary.html\#copy-1}{http://www.erlang.org/doc/man/binary.html\#copy-1}} if keeping only a small fragment (usually less than 64 bytes) of a larger binary;\footnote{It might be worth copying even a larger fragment of a refc binary. For example, copying 10 megabytes off a 2 gigabytes binary should be worth the short-term overhead if it allows the 2 gigabytes binary to be garbage-collected while keeping the smaller fragment longer.}
+	\item использовать копирование с помощью \function{binary:copy/1-2}\footnote{\href{http://www.erlang.org/doc/man/binary.html\#copy-1}{http://www.erlang.org/doc/man/binary.html\#copy-1}} если требуется хранение небольшого фрагмента (обычно короче, чем 64 байта) от большого блока данных\footnote{Идея скопировать и более длинный фрагмент двоичных refc-данных может оказаться разумной. Например, копирование 10 мегабайт из 2-гигабайтового блока данных стоит своей небольшой цены, поскольку позволяет освободить 2-гигабайтовый блок в то время, как более короткий фрагмент будет нужен вам долгое время.};
+%	\item move work that involves larger binaries to temporary one-off processes that will die when they're done (a lesser form of manual GC!);
+	\item перенести работу, задействующую большие двоичные данные во временные процессы, которые умрут сами по завершении работы (некая упрощённая форма сборки мусора вручную);
+%	\item or add hibernation calls when appropriate (possibly the cleanest solution for inactive processes).
+	\item добавить вызовы спящего режима (\emph{hibernate}) там, где это имеет смысл (для часто спящих процессов --- это самый лучший подход).
 \end{itemize*}
 
-The first two options are frankly not agreeable and should not be attempted before all else failed. The last three options are usually the best ones to be used.
+%The first two options are frankly not agreeable and should not be attempted before all else failed. The last three options are usually the best ones to be used.
+Первые два варианта, честно говоря, можно считать крайними случаями и не следует пытаться их выполнять до того, как вы попробовали другие варианты. А вот последние три варианта обычно самые подходящие.
 
-\subsubsection{Routing Binaries}
 
-There's a specific solution for a specific use case some Erlang users have reported. The problematic use case is usually having a middleman process routing binaries from one process to another one. That middleman process will therefore acquire a reference to every binary passing through it and risks being a common major source of refc binaries leaks.
+%\subsubsection{Routing Binaries}
+\subsubsection{Маршрутизация двоичных данных}
 
-The solution to this pattern is to have the router process return the pid to route to and let the original caller move the binary around. This will make it so that only processes that do \emph{need} to touch the binaries will do so.
+%There's a specific solution for a specific use case some Erlang users have reported. The problematic use case is usually having a middleman process routing binaries from one process to another one. That middleman process will therefore acquire a reference to every binary passing through it and risks being a common major source of refc binaries leaks.
+Есть одно особое решение для одного специального случая, о котором сообщали некоторые пользователи Erlang-систем. Проблемная ситуация обычно имела процесс-посредник, который маршрутизировал движение двоичных данных от одного к другому процессу. Этот процесс-посредник, таким образом, получал ссылку на каждый проходящий блок двоичных данных и рисковал оказаться основной причиной утечек или позднего освобождения двоичных данных.
 
-A fix for this can be implemented transparently in the router's API functions, without any visible change required by the callers.
+%The solution to this pattern is to have the router process return the pid to route to and let the original caller move the binary around. This will make it so that only processes that do \emph{need} to touch the binaries will do so.
+Решением такой ситуации является перенос работы к исполнителю --- процесс-маршрутизатор возвращал бы идентификатор процесса-получателя блока данных и вызывающий процесс передавал бы данные ему сам. Таким образом только те процессы, которым \emph{нужны} эти данные --- прикоснутся к ним и создадут ссылки на них в своих кучах.
 
-\section{Memory Fragmentation}
+%A fix for this can be implemented transparently in the router's API functions, without any visible change required by the callers.
+В качестве решения для этого можно реализовать прозрачные функции API маршрутизатора, позволяющие изменить способ передачи данных не требуя никаких изменений в клиентах.
+
+
+%\section{Memory Fragmentation}
+\section{Фрагментация памяти}
 \label{sec:memory-fragmentation}
 
-Memory fragmentation issues are intimately related to Erlang's memory model, as described in Section \NamedRef{subsec:erlang-memory-model}. It is by far one of the trickiest issues of running long-lived Erlang nodes (often when individual node uptime reaches many months), and will show up relatively rarely.
+%Memory fragmentation issues are intimately related to Erlang's memory model, as described in Section \NamedRef{subsec:erlang-memory-model}. It is by far one of the trickiest issues of running long-lived Erlang nodes (often when individual node uptime reaches many months), and will show up relatively rarely.
+Проблемы фрагментации памяти очень близко связаны с моделью памяти Erlang, как описывалось в секции \NamedRef{subsec:erlang-memory-model}. Эта проблема --- одна из самых сложных, при эксплуатации долгоживущих Erlang-узлов (часто возникающая, когда время жизни узла достигает многих месяцев), и вы будете встречать её относительно нечасто.
 
-The general symptoms of memory fragmentation are large amounts of memory being allocated during peak load, and that memory not going away after the fact. The damning factor will be that the node will internally report much lower usage (through \function{erlang:memory()}) than what is reported by the operating system.
+%The general symptoms of memory fragmentation are large amounts of memory being allocated during peak load, and that memory not going away after the fact. The damning factor will be that the node will internally report much lower usage (through \function{erlang:memory()}) than what is reported by the operating system.
+Общими симптомами фрагментации являются большие всплески распределения памяти операционной системой во время пиковой нагрузки, и то, что после спадания нагрузки память не торопится возвращаться. Смущающим фактором будет то, что внутренние отчёты виртуальной машины по памяти (\function{erlang:memory()}) будут показывать намного меньшие числа.
 
-\subsection{Finding Fragmentation}
 
-The \module{recon\_alloc} module was developed specifically to detect and help point towards the resolution of such issues.
+\subsection{Поиски фрагментации}
+%\subsection{Finding Fragmentation}
 
-Given how rare this type of issue has been so far over the community (or happened without the developers knowing what it was), only broad steps to detect things are defined. They're all vague and require the operator's judgement.
+%The \module{recon\_alloc} module was developed specifically to detect and help point towards the resolution of such issues.
+Модуль \module{recon\_alloc} был разработан с целью помочь обнаружить и дать подсказку к решению таких проблем.
 
-\subsubsection{Check Allocated Memory}
+%Given how rare this type of issue has been so far over the community (or happened without the developers knowing what it was), only broad steps to detect things are defined. They're all vague and require the operator's judgement.
+Зная насколько редко встречается этот тип проблем среди участников сообщества (или случался, когда разработчики не знали, что происходит), определены только широкие шаги поиска проблем. Они довольно общие и требуют оценки человеком.
 
-Calling \function{recon\_alloc:memory/1} will report various memory metrics with more flexibility than \function{erlang:memory/0}. Here are the possibly relevant arguments:
+
+%\subsubsection{Check Allocated Memory}
+\subsubsection{Проверьте выделенную память}
+
+%Calling \function{recon\_alloc:memory/1} will report various memory metrics with more flexibility than \function{erlang:memory/0}. Here are the possibly relevant arguments:
+Вызов функции \function{recon\_alloc:memory/1} сообщит ряд метрик памяти в более удобном формате, чем \function{erlang:memory/0}. Вот варианты подходящих аргументов:
 
 \begin{enumerate}
-	\item call \expression{recon\_alloc:memory(usage)}. This will return a value between 0 and 1 representing a percentage of memory that is being actively used by Erlang terms versus the memory that the Erlang VM has obtained from the OS for such purposes. If the usage is close to 100\%, you likely do not have memory fragmentation issues. You're just using a lot of it.
-	\item check if \expression{recon\_alloc:memory(allocated)} matches what the OS reports.\footnote{You can call \expression{recon\_alloc:set\_unit(Type)} to set the values reported by \module{recon\_alloc} in bytes, kilobytes, megabytes, or gigabytes} It should match it fairly closely if the problem is really about fragmentation or a memory leak from Erlang terms.
+%	\item call \expression{recon\_alloc:memory(usage)}. This will return a value between 0 and 1 representing a percentage of memory that is being actively used by Erlang terms versus the memory that the Erlang VM has obtained from the OS for such purposes. If the usage is close to 100\%, you likely do not have memory fragmentation issues. You're just using a lot of it.
+	\item вызовите \expression{recon\_alloc:memory(usage)}. Это вернёт значение от 0 до 1, представляющее процент активно используемой Erlang-термами памяти в сравнении с памятью, которая была взята на эти нужды у операционной системы. Если значение близко к 100\%, то, вероятно, у вас нет проблемы фрагментации, вы просто используете много памяти.
+%	\item check if \expression{recon\_alloc:memory(allocated)} matches what the OS reports.\footnote{You can call \expression{recon\_alloc:set\_unit(Type)} to set the values reported by \module{recon\_alloc} in bytes, kilobytes, megabytes, or gigabytes} It should match it fairly closely if the problem is really about fragmentation or a memory leak from Erlang terms.
+	\item проверьте, совпадает ли результат \expression{recon\_alloc:memory(allocated)} с числом, которое возвращает операционная система\footnote{Можно вызвать \expression{recon\_alloc:set\_unit(Единица)}, чтобы задать единицу измерения для значений, возвращаемых из \module{recon\_alloc} в байтах (bytes), килобайтах (kilobytes), мегабайтах (megabytes), или гигабайтах (gigabytes)}. Если число близко совпало, то проблема вероятно в фрагментации или утечке памяти Erlang-термов.
 \end{enumerate}
 
-That should confirm if memory seems to be fragmented or not.
+%That should confirm if memory seems to be fragmented or not.
+Это должно помочь укрепиться в мысли, фрагментирована ли ваша память или нет.
 
-\subsubsection{Find the Guilty Allocator}
 
-Call \expression{recon\_alloc:memory(allocated\_types)} to see which type of util allocator (see Section \NamedRef{subsec:erlang-memory-model}) is allocating the most memory. See if one looks like an obvious culprit when you compare the results with \expression{erlang:memory()}.
+\subsubsection{Поиск виновного аллокатора}
+%\subsubsection{Find the Guilty Allocator}
 
-Try \expression{recon\_alloc:fragmentation(current)}. The resulting data dump will show different allocators on the node with various usage ratios.\footnote{More information is available at \href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}}
+%Call \expression{recon\_alloc:memory(allocated\_types)} to see which type of util allocator (see Section \NamedRef{subsec:erlang-memory-model}) is allocating the most memory. See if one looks like an obvious culprit when you compare the results with \expression{erlang:memory()}.
+Вызовите функцию \expression{recon\_alloc:memory(allocated\_types)} чтобы увидеть, какой тип вспомогательного аллокатора (смотрите секцию \NamedRef{subsec:erlang-memory-model}) выделяет больше всего памяти. Проверьте, если одно из чисел выглядит очевидным виновником, когда вы сравниваете результаты с \expression{erlang:memory()}.
 
-If you see very low ratios, check if they differ when calling \expression{recon\_alloc:fragmentation(max)}, which should show what the usage patterns were like under your max memory load.
+%Try \expression{recon\_alloc:fragmentation(current)}. The resulting data dump will show different allocators on the node with various usage ratios.\footnote{More information is available at \href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}}
+Попробуйте вызвать \expression{recon\_alloc:fragmentation(current)}. Распечатка данных, полученная в качестве результата, покажет различные аллокаторы на вашем узле и уровни использования ими памяти\footnote{Дополнительная информация \href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}}.
 
-If there is a big difference, you are likely having issues with memory fragmentation for a few specific allocator types following usage spikes.
+%If you see very low ratios, check if they differ when calling \expression{recon\_alloc:fragmentation(max)}, which should show what the usage patterns were like under your max memory load.
+Если вы видите небольшие числа, то проверьте отличаются ли они, если вызвать \expression{recon\_alloc:fragmentation(max)}. Этот вызов покажет, каким было соотношение уровней при максимальной загрузке вашей памяти.
 
-\subsection{Erlang's Memory Model}
+%If there is a big difference, you are likely having issues with memory fragmentation for a few specific allocator types following usage spikes.
+Если вы видите большое различие, то вероятно у вас имеется проблема фрагментации для нескольких типов аллокаторов при всплеске нагрузки на узел.
+
+
+%\subsection{Erlang's Memory Model}
+\subsection{Модель памяти в Erlang}
 \label{subsec:erlang-memory-model}
 
-\subsubsection{The Global Level}
+%\subsubsection{The Global Level}
+\subsubsection{Взгляд снаружи}
 
-To understand where memory goes, one must first understand the many allocators being used. Erlang's memory model, for the entire virtual machine, is hierarchical. As shown in Figure \NamedRef{fig:allocators},  there are two main allocators, and a bunch of sub-allocators (numbered 1-9). The sub-allocators are the specific allocators used directly by Erlang code and the VM for most data types:\footnote{The complete list of where each data type lives can be found in \href{https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl\_alloc.types}{erts/emulator/beam/erl\_alloc.types}}
+%To understand where memory goes, one must first understand the many allocators being used. Erlang's memory model, for the entire virtual machine, is hierarchical. As shown in Figure \NamedRef{fig:allocators},  there are two main allocators, and a bunch of sub-allocators (numbered 1-9). The sub-allocators are the specific allocators used directly by Erlang code and the VM for most data types:\footnote{The complete list of where each data type lives can be found in \href{https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl\_alloc.types}{erts/emulator/beam/erl\_alloc.types}}
+Чтобы понять, куда уходит память, следует сначала разобраться с множеством используемых аллокаторов. Модель памяти в Erlang, во всей виртуальной машине, организована иерархически. Как показано на рисунке \ref{fig:allocators}, имеется два основных аллокатора, которые используются из Erlang-кода и виртуальной машины для почти всех типов данных\footnote{Полный список мест, где живут разные типы данных, можно найти здесь: \href{https://github.com/erlang/otp/blob/maint/erts/emulator/beam/erl\_alloc.types}{erts/emulator/beam/erl\_alloc.types}}:
 
 
 \begin{figure}
   \includegraphics{memory-allocs.pdf}%
-  \caption{Erlang's Memory allocators and their hierarchy. Not shown is the special \emph{super carrier}, optionally allowing to pre-allocate (and limit) all memory available to the Erlang VM since R16B03.}%
+%  \caption{Erlang's Memory allocators and their hierarchy. Not shown is the special \emph{super carrier}, optionally allowing to pre-allocate (and limit) all memory available to the Erlang VM since R16B03.}%
+	\caption{Аллокаторы памяти в Erlang и их иерархия. Не показаны особые \emph{супер-носители} (\emph{super carrier}), которые позволяют заранее распределять и ограничивать всю доступную память начиная с версии R16B03.}
    \label{fig:allocators}
 \end{figure}
 
 \begin{enumerate*}
-    \item \term{temp\_alloc}: does temporary allocations for short use cases (such as data living within a single C function call).
-    \item \term{eheap\_alloc}: heap data, used for things such as the Erlang processes' heaps.
-    \item \term{binary\_alloc}: the allocator used for reference counted binaries (what their 'global heap' is). Reference counted binaries stored in an ETS table remain in this allocator.
-    \item \term{ets\_alloc}: ETS tables store their data in an isolated part of memory that isn't garbage collected, but allocated and deallocated as long as terms are being stored in tables.
-    \item \term{driver\_alloc}: used to store driver data in particular, which doesn't keep drivers that generate Erlang terms from using other allocators. The driver data allocated here contains locks/mutexes, options, Erlang ports, etc.
-    \item \term{sl\_alloc}: short-lived memory blocks will be stored there, and include items such as some of the VM's scheduling information or small buffers used for some data types' handling.
-    \item \term{ll\_alloc}: long-lived allocations will be in there. Examples include Erlang code itself and the atom table, which stay there.
-    \item \term{fix\_alloc}: allocator used for frequently used fixed-size blocks of memory. One example of data used there is the internal processes' C struct, used internally by the VM.
-    \item \term{std\_alloc}: catch-all allocator for whatever didn't fit the previous categories. The process registry for named process is there.
+%    \item \term{temp\_alloc}: does temporary allocations for short use cases (such as data living within a single C function call).
+	\item \term{temp\_alloc}: выполняет временные распределения памяти для коротких задач (например, данные, живущие внутри одной С-функции).
+%    \item \term{eheap\_alloc}: heap data, used for things such as the Erlang processes' heaps.
+	\item \term{eheap\_alloc}: данные куч, используются для таких вещей, как кучи процессов в Erlang.
+%    \item \term{binary\_alloc}: the allocator used for reference counted binaries (what their 'global heap' is). Reference counted binaries stored in an ETS table remain in this allocator.
+	\item \term{binary\_alloc}: аллокатор используется для хранения двоичных данных, освобождаемых по счётчику ссылок (это их <<глобальная куча>>). Двоичные данные, хранящиеся в ETS-таблице тоже используют этот аллокатор.
+%    \item \term{ets\_alloc}: ETS tables store their data in an isolated part of memory that isn't garbage collected, but allocated and deallocated as long as terms are being stored in tables.
+	\item \term{ets\_alloc}: ETS-таблицы хранят свои данные в отдельной части памяти, которая не обслуживается сборщиком мусора, но живёт пока термы хранятся в таблице.
+%    \item \term{driver\_alloc}: used to store driver data in particular, which doesn't keep drivers that generate Erlang terms from using other allocators. The driver data allocated here contains locks/mutexes, options, Erlang ports, etc.
+	\item \term{driver\_alloc}: используется в частности для хранения данных драйверами, что впрочем не мешает им создавать Erlang-термы в других аллокаторах. Данные, выделенные здесь драйверами, могут содержать замки/мьютексы, настройки, порты Erlang и так далее.
+%    \item \term{sl\_alloc}: short-lived memory blocks will be stored there, and include items such as some of the VM's scheduling information or small buffers used for some data types' handling.
+	\item \term{sl\_alloc}: короткоживущие (\emph{short-lived}) блоки памяти попадают сюда и включают такие элементы, как информация планировщика виртуальной машины или маленькие буферы для нужд обработки некоторых типов данных.
+%    \item \term{ll\_alloc}: long-lived allocations will be in there. Examples include Erlang code itself and the atom table, which stay there.
+	\item \term{ll\_alloc}: долгоживущие (\emph{long-lived}) распределения памяти идут сюда. Примерами является сам Erlang-код и таблица атомов, которые остаются надолго.
+%    \item \term{fix\_alloc}: allocator used for frequently used fixed-size blocks of memory. One example of data used there is the internal processes' C struct, used internally by the VM.
+	\item \term{fix\_alloc}: аллокатор используется для частого распределения блоков одинакового размера. Примером данных может служить внутренняя структура описания процесса, которая используется виртуальной машиной.
+%    \item \term{std\_alloc}: catch-all allocator for whatever didn't fit the previous categories. The process registry for named process is there.
+	\item \term{std\_alloc}: стандартный аллокатор на все случаи жизни, используется, если предыдущие категории аллокаторов не подошли. Реестр для именованных процессов хранится здесь.	
 \end{enumerate*}
 
-By default, there will be one instance of each allocator per scheduler (and you should have one scheduler per core), plus one instance to be used by linked-in drivers using async threads. This ends up giving you a structure a bit like in Figure \NamedRef{fig:allocators}, but split it in \var{N} parts at each leaf.
+%By default, there will be one instance of each allocator per scheduler (and you should have one scheduler per core), plus one instance to be used by linked-in drivers using async threads. This ends up giving you a structure a bit like in Figure \NamedRef{fig:allocators}, but split it in \var{N} parts at each leaf.
+По умолчанию изначально имеется одна копия каждого аллокатора на каждый планировщик (и вам следует иметь один планировщик для каждого ядра процессора), плюс одна копия для встроенных драйверов, использующих асинхронные потоки (\emph{async threads}). Это даёт вам структуру подобную той, что показана на рисунке \ref{fig:allocators}, но каждый лист дерева разделяется на \var{N} частей.
 
-Each of these sub-allocators will request memory from \term{mseg\_alloc} and \term{sys\_alloc} depending on the use case, and in two possible ways. The first way is to act as a multiblock carrier (\term{mbcs}), which will fetch chunks of memory that will be used for many Erlang terms at once. For each \term{mbc}, the VM will set aside a given amount of memory (about 8MB by default in our case, which can be configured by tweaking VM options), and each term allocated will be free to go look into the many multiblock carriers to find some decent space in which to reside.
+%Each of these sub-allocators will request memory from \term{mseg\_alloc} and \term{sys\_alloc} depending on the use case, and in two possible ways. The first way is to act as a multiblock carrier (\term{mbcs}), which will fetch chunks of memory that will be used for many Erlang terms at once. For each \term{mbc}, the VM will set aside a given amount of memory (about 8MB by default in our case, which can be configured by tweaking VM options), and each term allocated will be free to go look into the many multiblock carriers to find some decent space in which to reside.
+Каждый из этих вложенных аллокаторов будет запрашивать память через \term{mseg\_alloc} либо через \term{sys\_alloc} в зависимости от цели использования, и двумя возможными способами. Первый способ --- это действовать в качестве мультиблочного носителя (\emph{multiblock carrier}, или \term{mbc}), который будет выделять блоки памяти для множества Erlang-термов одновременно. Для каждого \term{mbc} виртуальная машина зарезервирует заданное количество памяти (в нашем случае по умолчанию это будет 8 мегабайт, что можно регулировать в опциях виртуальной машины), и каждый терм при выделении своей памяти волен пройтись по множеству мультиблочных носителей в поиске достаточно большого свободного места, в котором можно поселиться.
 
-Whenever the item to be allocated is greater than the single block carrier threshold (\term{sbct})\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}}, the allocator switches this allocation into a single block carrier (\term{sbcs}). A single block carrier will request memory directly from \term{mseg\_alloc} for the first \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} entries, and then switch over to \term{sys\_alloc} and store the term there until it's deallocated.
+%Whenever the item to be allocated is greater than the single block carrier threshold (\term{sbct})\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}}, the allocator switches this allocation into a single block carrier (\term{sbcs}). A single block carrier will request memory directly from \term{mseg\_alloc} for the first \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} entries, and then switch over to \term{sys\_alloc} and store the term there until it's deallocated.
+Когда требуется выделить блок памяти размером больше, чем некоторый порог (\emph{threshold} или \term{sbct}) для одноблочных носителей\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}{http://erlang.org/doc/man/erts\_alloc.html\#M\_sbct}}, аллокатор переключит режим распределения в одноблочный носитель (\emph{single block carrier}, или \term{sbc}). Такой носитель затребует память непосредственно через \term{mseg\_alloc} для первых \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} попыток, а затем переключится на \term{sys\_alloc} и будет хранить терм там до тех пор, пока он не освобождается.
 
-So looking at something such as the binary allocator, we may end up with something similar to Figure \NamedRef{fig:allocation-1-normal}
+%So looking at something such as the binary allocator, we may end up with something similar to Figure \NamedRef{fig:allocation-1-normal}
+Итак, глядя на нечто такое, как двоичный аллокатор, мы можем получить картинку, похожую на рисунок \ref{fig:allocation-1-normal}.
 
 \begin{figure}
   \includegraphics{allocation-1-normal.pdf}%
-  \caption{Example memory allocated in a specific sub-allocator}%
+%  \caption{Example memory allocated in a specific sub-allocator}%
+	\caption{Пример памяти, выделенной в некотором вложенном аллокаторе}
    \label{fig:allocation-1-normal}
 \end{figure}
 \FloatBarrier
 
-Whenever a multiblock carrier (or the first \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} single block carriers) can be reclaimed, \term{mseg\_alloc} will try to keep it in memory for a while so that the next allocation spike that hits your VM can use pre-allocated memory rather than needing to ask the system for more each time.
+%Whenever a multiblock carrier (or the first \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} single block carriers) can be reclaimed, \term{mseg\_alloc} will try to keep it in memory for a while so that the next allocation spike that hits your VM can use pre-allocated memory rather than needing to ask the system for more each time.
+Когда мультиблочный носитель (или первые \term{mmsbc}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}{http://erlang.org/doc/man/erts\_alloc.html\#M\_mmsbc}} одноблочных носителей) могут быть возвращены операционной системе, \term{mseg\_alloc} попытается удержать их в памяти в течение некоторого времени на случай, если возникнет всплеск запросов выделения памяти, чтобы можно было взять готовые блоки, а не требовать создания новых.
 
-You then need to know the different memory allocation strategies of the Erlang virtual machine:
+%You then need to know the different memory allocation strategies of the Erlang virtual machine:
+Затем вам нужно узнать о различных стратегиях выделения памяти, которые есть в виртуальной машине Erlang:
 
 \begin{enumerate*}
-    \item Best fit (\term{bf})
-    \item Address order best fit (\term{aobf})
-    \item Address order first fit (\term{aoff})
-    \item Address order first fit carrier best fit (\term{aoffcbf})
-    \item Address order first fit carrier address order best fit (\term{aoffcaobf})
-    \item Good fit (\term{gf})
-    \item A fit (\term{af})
+%    \item Best fit (\term{bf})
+	\item Best fit (\term{bf}) --- лучший подходящий размер.
+%    \item Address order best fit (\term{aobf})
+	\item Address order best fit (\term{aobf}) --- лучший подходящий в порядке адресов.
+%    \item Address order first fit (\term{aoff})
+	\item Address order first fit (\term{aoff}) --- первый подходящий в порядке адресов.
+%    \item Address order first fit carrier best fit (\term{aoffcbf})
+	\item Address order first fit carrier best fit (\term{aoffcbf}) --- первый подходящий в порядке адресов, лучший подходящий носитель.
+%    \item Address order first fit carrier address order best fit (\term{aoffcaobf})
+	\item Address order first fit carrier address order best fit (\term{aoffcaobf}) --- первый подходящий в порядке адресов, лучший подходящий носитель в порядке адресов.
+%    \item Good fit (\term{gf})
+	\item Good fit (\term{gf}) --- достаточно хорошо подходящий.
+%    \item A fit (\term{af})
+	\item A fit (\term{af}) -- какой попало подходящий.
 \end{enumerate*}
 
-Each of these strategies can be configured individually for each \term{alloc\_util} allocator\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}}
+%Each of these strategies can be configured individually for each \term{alloc\_util} allocator\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}}
+Каждая из этих стратегий может быть настроена индивидуально для каждого аллокатора \term{alloc\_util}\footnote{\href{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}{http://erlang.org/doc/man/erts\_alloc.html\#M\_as}}.
 
 \begin{figure}
   \includegraphics[max height=7cm]{allocation-strategy-1.pdf}%
   \centering%
-  \caption{Example memory allocated in a specific sub-allocator}%
+%  \caption{Example memory allocated in a specific sub-allocator}%
+	\caption{Пример памяти, выделенной в некотором вложенном аллокаторе}
    \label{fig:allocation-strategy-1}
 \end{figure}
 \FloatBarrier
 
-For \emph{best fit} (\term{bf}), the VM builds a balanced binary tree of all the free blocks' sizes, and will try to find the smallest one that will accommodate the piece of data and allocate it there. In Figure \NamedRef{fig:allocation-strategy-1}, having a piece of data that requires three blocks would likely end in area 3.
+%For \emph{best fit} (\term{bf}), the VM builds a balanced binary tree of all the free blocks' sizes, and will try to find the smallest one that will accommodate the piece of data and allocate it there. In Figure \NamedRef{fig:allocation-strategy-1}, having a piece of data that requires three blocks would likely end in area 3.
+Для стратегии \emph{best fit} (\term{bf}) виртуальная машина строит сбалансированное дерево, содержащее размеры всех свободных блоков и попытается найти наименьший подходящий свободный интервал и разместить блок в нём. На рисунке \ref{fig:allocation-strategy-1} при необходимости выделить блок данных длиной три клеточки, вероятнее всего он попадёт в область 3.
 
 \emph{Address order best fit} (\term{aobf}) will work similarly, but the tree instead is based on the addresses of the blocks. So the VM will look for the smallest block available that can accommodate the data, but if many of the same size exist, it will favor picking one that has a lower address. If I have a piece of data that requires three blocks, I'll still likely end up in area 3, but if I need two blocks, this strategy will favor the first \term{mbcs} in Figure \NamedRef{fig:allocation-strategy-1} with area 1 (instead of area 5). This could make the VM have a tendency to favor the same carriers for many allocations.
 
