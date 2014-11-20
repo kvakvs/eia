@@ -2864,70 +2864,96 @@ undefined
 \subsubsection{Взгляд на уровне процесса}
 \label{subsec:memory-process-level}
 
-On a smaller scale, for each Erlang process, the layout still is a bit different. It basically has this piece of memory that can be imagined as one box:
+%On a smaller scale, for each Erlang process, the layout still is a bit different. It basically has this piece of memory that can be imagined as one box:
+В меньшем масштабе, для каждого процесса Erlang, устройство памяти немного отличается. Можно представить себе некий контейнер, являющийся блоком в памяти, изобразим его так:
 
 \begin{VerbatimText}
 [                  ]
 \end{VerbatimText}
 
-On one end you have the heap, and on the other, you have the stack:
+%On one end you have the heap, and on the other, you have the stack:
+В одном конце его находится куча, а в другом --- стек:
 
 \begin{VerbatimText}
-[heap |     | stack]
+[куча |      | стек]
 \end{VerbatimText}
 
-In practice there's more data (you have an old heap and a new heap, for generational GC, and also a virtual binary heap, to account for the space of reference-counted binaries on a specific sub-allocator not used by the process — \term{binary\_alloc} vs. \term{eheap\_alloc}):
+%In practice there's more data (you have an old heap and a new heap, for generational GC, and also a virtual binary heap, to account for the space of reference-counted binaries on a specific sub-allocator not used by the process — \term{binary\_alloc} vs. \term{eheap\_alloc}):
+На практике данных больше (есть старая куча, и новая куча, для сборщика мусора, работающего с поколениями памяти, а также куча для двоичных данных, чтобы с их помощью считать ссылки на большие двоичные данные в большой куче, отдельно от процесса --- \term{binary\_alloc} против \term{eheap\_alloc}):
 
 \begin{VerbatimText}
-[heap   ||    stack]
+[куча   ||     стек]
 \end{VerbatimText}
 
-The space is allocated more and more up until either the stack or the heap can't fit in anymore. This triggers a minor GC. The minor GC moves the data that can be kept into the old heap. It then collects the rest, and may end up reallocating more space.
+%The space is allocated more and more up until either the stack or the heap can't fit in anymore. This triggers a minor GC. The minor GC moves the data that can be kept into the old heap. It then collects the rest, and may end up reallocating more space.
+Место продолжает выделяться с двух концов до тех пор, пока стек или куча не перестают помещаться. Это включает малый цикл сборки мусора. Эта сборка перемещает данные, которые продолжают существовать, в старую кучу. Затем сборщик собирает то, что осталось и, возможно, выделит новый блок памяти большего размера.
 
-After a given number of minor GCs and/or reallocations, a full-sweep GC is performed, which inspects both the new and old heaps, frees up more space, and so on. When a process dies, both the stack and heap are taken out at once. reference-counted binaries are decreased, and if the counter is at 0, they vanish.
+%After a given number of minor GCs and/or reallocations, a full-sweep GC is performed, which inspects both the new and old heaps, frees up more space, and so on. When a process dies, both the stack and heap are taken out at once. reference-counted binaries are decreased, and if the counter is at 0, they vanish.
+После заданного количества малых сборок мусора и перевыделений новой памяти, выполняется полный цикл сборки мусора (\emph{full-sweep}), который анализирует новую и старую кучи, освобождает дополнительное место и так далее. Когда процесс умирает, стек и куча одновременно освобождаются, уменьшаются счётчики на двоичных данных, которые хранятся по количеству ссылок, и если они достигают нуля, то данные тоже освобождаются.
 
-When that happens, over 80\% of the time, the only thing that happens is that the memory is marked as available in the sub-allocator and can be taken back by new processes or other ones that may need to be resized. Only after having this memory unused — and the multiblock carrier unused also — is it returned to \term{mseg\_alloc} or \term{sys\_alloc}, which may or may not keep it for a while longer.
-
-\subsection{Fixing Memory Fragmentation with a Different Allocation Strategy}
-
-Tweaking your VM's options for memory allocation may help.
-
-You will likely need to have a good understanding of what your type of memory load and usage is, and be ready to do a lot of in-depth testing. The \module{recon\_alloc} module contains a few helper functions to provide guidance, and the module's documentation\footnote{\href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}} should be read at this point.
-
-You will need to figure out what the average data size is, the frequency of allocation and deallocation, whether the data fits in \term{mbcs} or \term{sbcs},  and you will then need to try playing with a bunch of the options mentioned in \module{recon\_alloc}, try the different strategies, deploy them, and see if things improve or if they impact times negatively.
-
-This is a very long process for which there is no shortcut, and if issues happen only every few months per node, you may be in for the long haul. 
+%When that happens, over 80\% of the time, the only thing that happens is that the memory is marked as available in the sub-allocator and can be taken back by new processes or other ones that may need to be resized. Only after having this memory unused — and the multiblock carrier unused also — is it returned to \term{mseg\_alloc} or \term{sys\_alloc}, which may or may not keep it for a while longer.
+Когда это происходит, то в 80\% случаях память оказывается отмеченной во вложенном аллокаторе, как свободная, и может быть взята новыми или другими процессами, которым потребовалось изменение размера. Только после того, как эта память не была использована в течение некоторого времени --- и мультиблочный носитель не был использован тоже --- память будет возвращена системному аллокатору, откуда она была взята (\term{mseg\_alloc} или \term{sys\_alloc}), который на своё усмотрение может удержать её ещё некоторое время.
 
 
-\section{Exercises}
+%\subsection{Fixing Memory Fragmentation with a Different Allocation Strategy}
+\subsection{Боремся с фрагментацией, изменяя стратегию распределения памяти}
 
-\subsection*{Review Questions}
+%Tweaking your VM's options for memory allocation may help.
+Можно попробовать настроить параметры виртуальной машины, отвечающие за распределение памяти.
+
+%You will likely need to have a good understanding of what your type of memory load and usage is, and be ready to do a lot of in-depth testing. The \module{recon\_alloc} module contains a few helper functions to provide guidance, and the module's documentation\footnote{\href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}} should be read at this point.
+Вероятно вам понадобится хорошее понимание вашей ситуации с нагрузкой на память и её использованием, и будьте готовы провести множество тестов для выяснения этих фактов. Модуль \module{recon\_alloc} содержит несколько вспомогательных функций, которые направят ваш путь, и это будет самым подходящим временем прочесть документацию к модулю\footnote{\href{http://ferd.github.io/recon/recon\_alloc.html}{http://ferd.github.io/recon/recon\_alloc.html}}.
+
+%You will need to figure out what the average data size is, the frequency of allocation and deallocation, whether the data fits in \term{mbcs} or \term{sbcs},  and you will then need to try playing with a bunch of the options mentioned in \module{recon\_alloc}, try the different strategies, deploy them, and see if things improve or if they impact times negatively.
+Вам нужно будет выяснить средний размер ваших данных в памяти, частоту распределений и освобождений, попадают ли ваши данные в мультиблоки (\term{mbcs}) или в одиночные блоки (\term{sbcs}), и затем попробуйте поиграть с множеством опций, которые упомянуты в модуле \module{recon\_alloc}. Попробуйте разные стратегии, установите их, сравните ситуацию --- улучшилась ли она или всё стало медленнее и хуже.
+
+%This is a very long process for which there is no shortcut, and if issues happen only every few months per node, you may be in for the long haul. 
+Это долгий кропотливый процесс для которого нет известного короткого пути, и если проблемы случаются каждые несколько месяцев, то будьте готовы к тому, что поиски затянутся.
+
+
+\section{Упражнения}
+
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item Name some of the common sources of leaks in Erlang programs.
-	\item What are the two main types of binaries in Erlang?
-	\item What could be to blame if no specific data type seems to be the source of a leak?
-	\item If you find the node died with a process having a lot of memory, what could you do to find out which one it was?
-	\item How could code itself cause a leak?
-	\item How can you find out if garbage collections are taking too long to run?
+%	\item Name some of the common sources of leaks in Erlang programs.
+	\item Назовите несколько известных вам источников утечек ресурсов в Erlang-программах.
+%	\item What are the two main types of binaries in Erlang?
+	\item Какие два вида блоков двоичных данных имеются в Erlang?
+%	\item What could be to blame if no specific data type seems to be the source of a leak?
+	\item Где следует искать, если никакой из типов данных не выглядит источником утечки?
+%	\item If you find the node died with a process having a lot of memory, what could you do to find out which one it was?
+	\item Если вы обнаружили смерть узла, в котором один из процессов занял очень много памяти, что вы можете сделать для поиска виновного процесса?
+%	\item How could code itself cause a leak?
+	\item Как сам код может явиться причиной утечки?
+%	\item How can you find out if garbage collections are taking too long to run?
+	\item Как можно выяснить, что сборка мусора начала занимать очень долгое время?
 \end{enumerate}
 
-\subsection*{Open-ended Questions}
+\subsection*{\OpenEndedTitle{}}
 
 \begin{enumerate}
-	\item  How could you verify if a leak is caused by forgetting to kill processes, or by processes using too much memory on their own?
-	\item A process opens a 150MB log file in binary mode to go extract a piece of information from it, and then stores that information in an ETS table. After figuring out you have a binary memory leak, what should be done to minimize binary memory usage on the node?
-	\item What could you use to find out if ETS tables are growing too fast?
-	\item What steps should you go through to find out that a node is likely suffering from fragmentation? How could you disprove the idea that is could be due to a NIF or driver leaking memory?
-	\item How could you find out if a process with a large mailbox (from reading \term{message\_queue\_len}) seems to be leaking data from there, or never handling new messages?
-	\item A process with a large memory footprint seems to be rarely running garbage collections. What could explain this?
-	\item When should you alter the allocation strategies on your nodes? Should you prefer to tweak this, or the way you wrote code?
+%	\item  How could you verify if a leak is caused by forgetting to kill processes, or by processes using too much memory on their own?
+	\item Как можно проверить, является ли причиной утечки то, что вы забыли убить ненужные процессы или они просто сами начали использовать слишком много памяти?
+%	\item A process opens a 150MB log file in binary mode to go extract a piece of information from it, and then stores that information in an ETS table. After figuring out you have a binary memory leak, what should be done to minimize binary memory usage on the node?
+	\item Некий процесс открывает 150-мегабайтовый файл журнала в режиме двоичного чтения для извлечения некоторой информации, затем сохраняет информацию в ETS-таблице. После выяснения наличия у вас утечки двоичной памяти, что можно сделать, чтобы минимизировать расход двоичной памяти на данном узле?
+%	\item What could you use to find out if ETS tables are growing too fast?
+	\item Что можно использовать для выяснения того факла, что ваши ETS-таблицы растут слишком быстро?
+%	\item What steps should you go through to find out that a node is likely suffering from fragmentation? How could you disprove the idea that is could be due to a NIF or driver leaking memory?
+	\item Какие шаги вам следует пройти, чтобы узнать, что ваш узел вероятно страдает от фрагментации памяти? Как можно опровергнуть догадку, что виновником мог являться драйвер или встроенная (NIF) функция?
+%	\item How could you find out if a process with a large mailbox (from reading \term{message\_queue\_len}) seems to be leaking data from there, or never handling new messages?
+	\item Как можно выяснить, что процесс с большим почтовым ящиком (посредством чтения параметра \term{message\_queue\_len}) вероятно имеет утечку памяти из ящика или не обслуживает новые сообщения?
+%	\item A process with a large memory footprint seems to be rarely running garbage collections. What could explain this?
+	\item Процесс с большим потреблением памяти вероятно редко выполняет сборку мусора. Чем можно это объяснить?
+%	\item When should you alter the allocation strategies on your nodes? Should you prefer to tweak this, or the way you wrote code?
+	\item Когда вам следует изменять стратегии распределения памяти на ваших узлах? Предпочтёте ли вы настраивать стратегии или исправить ваш код?
 \end{enumerate}
 
-\subsection*{Hands-On}
+\subsection*{\HandsOnTitle{}}
 
 \begin{enumerate}
-	\item Using any system you know or have to maintain in Erlang (including toy systems), can you figure out if there are any binary memory leaks on there?
+%	\item Using any system you know or have to maintain in Erlang (including toy systems), can you figure out if there are any binary memory leaks on there?
+	\item Используя любую систему, которая вам знакома или которую вам приходится обслуживать, написанную на Erlang (включая игрушечные системы для незначительных проектов), сможете ли вы выяснить, имеет ли эта система утечки двоичной памяти?
 \end{enumerate}
 	
 %%%
@@ -2978,27 +3004,37 @@ This is a very long process for which there is no shortcut, and if issues happen
 %%%
 %%%
 
-\chapter{CPU and Scheduler Hogs}
+\chapter{Перерасход процессора и занятость планировщиков}
 \label{chap:cpu-hogs}
 
-While memory leaks tend to absolutely kill your system, CPU exhaustion tends to act like a bottleneck and limits the maximal work you can get out of a node. Erlang developers will have a tendency to scale horizontally when they face such issues. It is often an easy enough job to scale out the more basic pieces of code out there. Only centralized global state (process registries, ETS tables, and so on) usually need to be modified.\footnote{Usually this takes the form of sharding or finding a state-replication scheme that's suitable, and little more. It's still a decent piece of work, but nothing compared to finding out most of your program's semantics aren't applicable to distributed systems given Erlang usually forces your hand there in the first place.} Still, if you want to optimize locally before scaling out at first, you need to be able to find your CPU and scheduler hogs.
+%While memory leaks tend to absolutely kill your system, CPU exhaustion tends to act like a bottleneck and limits the maximal work you can get out of a node. Erlang developers will have a tendency to scale horizontally when they face such issues. It is often an easy enough job to scale out the more basic pieces of code out there. Only centralized global state (process registries, ETS tables, and so on) usually need to be modified.\footnote{Usually this takes the form of sharding or finding a state-replication scheme that's suitable, and little more. It's still a decent piece of work, but nothing compared to finding out most of your program's semantics aren't applicable to distributed systems given Erlang usually forces your hand there in the first place.} Still, if you want to optimize locally before scaling out at first, you need to be able to find your CPU and scheduler hogs.
+В то время, как утечки памяти могут абсолютно легко убить вашу систему, истощение ресурса процессора действует в качестве узкого места и ограничивает количество работы, которую вы можете получить от узла. Erlang-разработчики при возникновении таких проблем предпочитают горизонтальное масштабирование. Часто достаточно несложно вынести и отмасштабировать несколько простых блоков кода. Обычно для этого следует изменить глобальное состояние (реестры процессов, ETS-таблицы и так далее)\footnote{Обычно это принимает форму фрагментирования (\emph{sharding}) или поиска более-менее подходящей схемы репликации состояния, ну и ещё кое что. Это является существенным куском работы, но совсем немного по сравнению с затратами на выяснение того факта, что семантика вашей программы не подходит для распределённых систем, хотя обычно Erlang заставляет вас заняться именно этим с самого начала.}. Если вы желаете оптимизировать систему локально перед тем, как начать масштабироваться, вам нужно будет найти причины перерасхода процессора и планировщиков.
 
-It is generally difficult to properly analyze the CPU usage of an Erlang node to pin problems to a specific piece of code. With everything concurrent and in a virtual machine, there is no guarantee you will find out if a specific process, driver, your own Erlang code, NIFs you may have installed, or some third-party library is eating up all your processing power.
+%It is generally difficult to properly analyze the CPU usage of an Erlang node to pin problems to a specific piece of code. With everything concurrent and in a virtual machine, there is no guarantee you will find out if a specific process, driver, your own Erlang code, NIFs you may have installed, or some third-party library is eating up all your processing power.
+Обычно достаточно трудно провести качественный анализ расхода процессора на Erlang-узле, чтобы отследить источник проблем с точностью до фрагмента кода. Когда всё выполняется одновременно и на виртуальной машине, нет гарантий того, что вы найдёте, кто съел весь процессор --- конкретный процесс, драйвер, ваш собственный код, установленные вами встроенные (NIF) функции или какая-то дополнительная библиотека.
 
-The existing approaches are often limited to profiling and reduction-counting if it's in your code, and to monitoring the scheduler's work if it might be anywhere else (but also your code).
+%The existing approaches are often limited to profiling and reduction-counting if it's in your code, and to monitoring the scheduler's work if it might be anywhere else (but also your code).
+Существующие подходы обычно ограничиваются профилированием и подсчётом редукций, если проблема в вашем коде, либо мониторингом работы планировщика, если причина может быть где-то в другом месте (но тоже в вашем коде).
 
-\section{Profiling and Reduction Counts}
+
+%\section{Profiling and Reduction Counts}
+\section{Профилирование и подсчёт редукций}
 \label{sec:cpu-profiling}
 
-To pin issues to specific pieces of Erlang code, as mentioned earlier, there are two main approaches. One will be to do the old standard profiling routine, likely using one of the following applications:\footnote{All of these profilers work using Erlang tracing functionality with almost no restraint. They will have an impact on the run-time performance of the application, and shouldn't be used in production.}
+%To pin issues to specific pieces of Erlang code, as mentioned earlier, there are two main approaches. One will be to do the old standard profiling routine, likely using one of the following applications:\footnote{All of these profilers work using Erlang tracing functionality with almost no restraint. They will have an impact on the run-time performance of the application, and shouldn't be used in production.}
+Чтобы отследить причины проблем до конкретных мест в Erlang-коде, как упоминалось ранее, существуют два главных подхода. Один способ --- выполнить старую стандартную процедуру профилирования, вероятно с использованием следующих приложений\footnote{Все они используют встроенную в Erlang трассировку практически без ограничений. Они могут ощутимо ударить по производительности вашего приложения и их не следует использовать на производственных системах.}:
 
 \begin{itemize*}
-	\item \otpapp{eprof},\footnote{\href{http://www.erlang.org/doc/man/eprof.html}{http://www.erlang.org/doc/man/eprof.html}} the oldest Erlang profiler around. It will give general percentage values and will mostly report in terms of time taken.
-	\item \otpapp{fprof},\footnote{\href{http://www.erlang.org/doc/man/fprof.html}{http://www.erlang.org/doc/man/fprof.html}} a more powerful replacement of eprof. It will support full concurrency and generate in-depth reports. In fact, the reports are so deep that they are usually considered opaque and hard to read. 
-	\item \otpapp{eflame},\footnote{\href{https://github.com/proger/eflame}{https://github.com/proger/eflame}} the newest kid on the block. It generates flame graphs to show deep call sequences and hot-spots in usage on a given piece of code. It allows one to quickly find issues with a single look at the final result.
+%	\item \otpapp{eprof},\footnote{\href{http://www.erlang.org/doc/man/eprof.html}{http://www.erlang.org/doc/man/eprof.html}} the oldest Erlang profiler around. It will give general percentage values and will mostly report in terms of time taken.
+	\item \otpapp{eprof},\footnote{\href{http://www.erlang.org/doc/man/eprof.html}{http://www.erlang.org/doc/man/eprof.html}} самый старый из известных профайлеров для Erlang. Он даёт общие значения в процентах и обычно расчёт ведётся на основании затраченного времени.
+%	\item \otpapp{fprof},\footnote{\href{http://www.erlang.org/doc/man/fprof.html}{http://www.erlang.org/doc/man/fprof.html}} a more powerful replacement of eprof. It will support full concurrency and generate in-depth reports. In fact, the reports are so deep that they are usually considered opaque and hard to read. 
+	\item \otpapp{fprof},\footnote{\href{http://www.erlang.org/doc/man/fprof.html}{http://www.erlang.org/doc/man/fprof.html}} является более мощной заменой для eprof. Он поддерживает параллельное исполнение и строит подробные отчёты. На самом деле, отчёты настолько трудно читать, что их можно считать чёрным ящиком.
+%	\item \otpapp{eflame},\footnote{\href{https://github.com/proger/eflame}{https://github.com/proger/eflame}} the newest kid on the block. It generates flame graphs to show deep call sequences and hot-spots in usage on a given piece of code. It allows one to quickly find issues with a single look at the final result.
+	\item \otpapp{eflame},\footnote{\href{https://github.com/proger/eflame}{https://github.com/proger/eflame}} --- один из новейших продуктов. Он создаёт огненные графики (\emph{flame graphs}) для демонстрации глубоко идущих вызовов функций и подсвечивает нагруженные участки в заданном коде. Позволяет быстро найти проблемы по одному взгляду на окончательный результат.
 \end{itemize*}
 
-It will be left to the reader to thoroughly read each of these application's documentation. The other approach will be to run \function{recon:proc\_window/3} as introduced in Subsection \NamedRef{subsec:digging-procs}:
+%It will be left to the reader to thoroughly read each of these application's documentation. The other approach will be to run \function{recon:proc\_window/3} as introduced in Subsection \NamedRef{subsec:digging-procs}:
+Задачу прочитать документацию по этим приложениям я оставляю на совести читателя. Второй подход предполагает, что вы выполните функцию \function{recon:proc\_window/3}, которая представлена в секции \NamedRef{subsec:digging-procs}:
 
 \begin{VerbatimEshell}
 1> recon:proc_window(reductions, 3, 500).
@@ -3013,20 +3049,28 @@ It will be left to the reader to thoroughly read each of these application's doc
    {initial_call,{erlang,apply,2}}]}]
 \end{VerbatimEshell}
 
-The reduction count has a direct link to function calls in Erlang, and a high count is usually the synonym of a high amount of CPU usage. 
+%The reduction count has a direct link to function calls in Erlang, and a high count is usually the synonym of a high amount of CPU usage. 
+Счёт редукций прямо связан с вызовами функций в Erlang, и большое значение счётчика обычно является синонимом высокого потребления процессорной мощности.
 
-What's interesting with this function is to try it while a system is already rather busy,\footnote{See Subsection \NamedRef{subsec:global-cpu}} with a relatively short interval. Repeat it many times, and you should hopefully see a pattern emerge where the same processes (or the same \emph{kind} of processes) tend to always come up on top.
+%What's interesting with this function is to try it while a system is already rather busy,\footnote{See Subsection \NamedRef{subsec:global-cpu}} with a relatively short interval. Repeat it many times, and you should hopefully see a pattern emerge where the same processes (or the same \emph{kind} of processes) tend to always come up on top.
+Что интересно в этой функции это то, что её можно запустить, когда система довольно нагружена\footnote{Смотрите подсекцию \NamedRef{subsec:global-cpu}}, с относительно коротким интервалом. Повторите этот шаг много раз и вы, вероятно, заметите появление похожих шаблонов в цифрах, когда одни и те же процессы (или один \emph{тип} процессов) часто оказываются на первых местах.
 
-Using the code locations\footnote{Call \expression{recon:info(PidTerm, location)} or \expression{process\_info(Pid, current\_stacktrace)} to get this information.} and current functions being run, you should be able to identify what kind of code hogs all your schedulers.
+%Using the code locations\footnote{Call \expression{recon:info(PidTerm, location)} or \expression{process\_info(Pid, current\_stacktrace)} to get this information.} and current functions being run, you should be able to identify what kind of code hogs all your schedulers.
+Используя функции поиска местонахождения в коде\footnote{Вызовите \expression{recon:info(PidTerm, location).} или \expression{process\_info(Pid, current\_stacktrace)}, чтобы получить эту информацию.} и информацию о текущих исполняющихся функциях, вы сможете определить, какой код занял все ваши планировщики.
 
-\section{System Monitors}
+
+%\section{System Monitors}
+\section{Системные мониторы}
 \label{sec:cpu-system-monitors}
 
-If nothing seems to stand out through either profiling or checking reduction counts, it's possible some of your work ends up being done by NIFs, garbage collections, and so on. These kinds of work may not always increment their reductions count correctly, so they won't show up with the previous methods, only through long run times.
+%If nothing seems to stand out through either profiling or checking reduction counts, it's possible some of your work ends up being done by NIFs, garbage collections, and so on. These kinds of work may not always increment their reductions count correctly, so they won't show up with the previous methods, only through long run times.
+Если профилирование или проверка счётчиков редукций не нашла выдающихся цифр, вероятно часть неучтённой работы выполняется во встроенных (NIF) функциях, в сборке мусора и так далее. Такие виды работы не всегда увеличивают счётчики редукций, так что они могут оказаться невидимыми при поиске предыдущими методами, и проявляют себя только в виде долгого времени исполнения.
 
-To find about such cases, the best way around is to use \function{erlang:system\_monitor/2}, and look for \term{long\_gc} and \term{long\_schedule}. The former will show whenever garbage collection ends up doing a lot of work (it takes time!), and the latter will likely catch issues with busy processes, either through NIFs or some other means, that end up making them hard to de-schedule.\footnote{Long garbage collections count towards scheduling time. It is very possible that a lot of your long schedules will be tied to garbage collections depending on your system.}
+%To find about such cases, the best way around is to use \function{erlang:system\_monitor/2}, and look for \term{long\_gc} and \term{long\_schedule}. The former will show whenever garbage collection ends up doing a lot of work (it takes time!), and the latter will likely catch issues with busy processes, either through NIFs or some other means, that end up making them hard to de-schedule.\footnote{Long garbage collections count towards scheduling time. It is very possible that a lot of your long schedules will be tied to garbage collections depending on your system.}
+Для поиска таких случаев лучшим способом является функция \function{erlang:system\_monitor/2}, а именно опции \term{long\_gc} и \term{long\_schedule}. Первое покажет, когда сборка мусора выполняет большую работу (это занимает время!), а второе вероятно поймает проблемы с занятыми процессами по причине, например, выполнения встроенных (NIF) функций, или чего-то другого, что мешает им правильно отдать управление планировщику\footnote{Длинные сборки мусора включаются в расход времени планировщиком. Очень вероятно, что долгие переключения планировщика связаны со сборками мусора, в зависимости от вашей системы.}.
 
-We've seen how to set such a system monitor In Garbage Collection in \NamedRef{subsubsec:leak-gc}, but here's a different pattern\footnote{If you're on 17.0 or newer versions, the shell functions can be made recursive far more simply by using their named form, but to have the widest compatibility possible with older versions of Erlang, I've let them as is.} I've used before to catch long-running items:
+%We've seen how to set such a system monitor In Garbage Collection in \NamedRef{subsubsec:leak-gc}, but here's a different pattern\footnote{If you're on 17.0 or newer versions, the shell functions can be made recursive far more simply by using their named form, but to have the widest compatibility possible with older versions of Erlang, I've let them as is.} I've used before to catch long-running items:
+Мы видели, как установить такой системный монитор в секции \NamedRef{subsubsec:leak-gc}, но есть другой шаблон поиска решения\footnote{Если вы пользуетесь Erlang версии 17.0 или более новым, функции в консоли интерпретатора можно делать рекурсивными гораздо проще, используя их именованную запись, но для совместимости со всеми версиями, я оставил их без изменений.}, который я использовал для поиска долго исполняющихся фрагментов кода:
 
 \begin{VerbatimEshell}
 1> F = fun(F) ->
@@ -3050,36 +3094,47 @@ monitor=long_schedule pid=<0.54.0> info=[{timeout,1102},
                                          {out,{some_module,some_function,3}}]
 \end{VerbatimEshell}
 
-Be sure to set the \term{long\_schedule} and \term{long\_gc} values to large-ish values that might be reasonable to you. In this example, they're set to 1000 milliseconds. You can either kill the monitor by calling \expression{exit(whereis(temp\_sys\_monitor), kill)} (which will in turn kill the shell because it's linked), or just disconnect from the node (which will kill the process because it's linked to the shell.)
+%Be sure to set the \term{long\_schedule} and \term{long\_gc} values to large-ish values that might be reasonable to you. In this example, they're set to 1000 milliseconds. You can either kill the monitor by calling \expression{exit(whereis(temp\_sys\_monitor), kill)} (which will in turn kill the shell because it's linked), or just disconnect from the node (which will kill the process because it's linked to the shell.)
+Не забудьте установить параметры \term{long\_schedule} и \term{long\_gc} в некоторые достаточно высокие значения, которые для вас выглядят разумными. В этом примере я установил их в 1000 миллисекунд. Вы можете убить монитор командой \expression{exit(whereis(temp\_sys\_monitor), kill)} (что также убьёт и интерпретатор, поскольку они связаны), или просто отключитесь от узла (что убьёт процесс, поскольку он связан с интерпретатором).
 
-This kind of code and monitoring can be moved to its own module where it reports to a long-term logging storage, and can be used as a canary for performance degradation or overload detection.
+%This kind of code and monitoring can be moved to its own module where it reports to a long-term logging storage, and can be used as a canary for performance degradation or overload detection.
+Такой вид кода и мониторинга можно перенести в собственный модуль, где он будет собирать статистику в некоторое долгоживущее хранилище, на основе которой потом можно выяснить о падении производительности или определять перегрузку.
 
-\subsection{Suspended Ports}
+
+%\subsection{Suspended Ports}
+\subsection{Замороженные порты}
 \label{subsec:port-system-monitors}
 
-An interesting part of system monitors that didn't fit anywhere but may have to do with scheduling is regarding ports. When a process sends too many message to a port and the port's internal queue gets full, the Erlang schedulers will forcibly de-schedule the sender until space is freed. This may end up surprising a few users who didn't expect that implicit back-pressure from the VM.
+%An interesting part of system monitors that didn't fit anywhere but may have to do with scheduling is regarding ports. When a process sends too many message to a port and the port's internal queue gets full, the Erlang schedulers will forcibly de-schedule the sender until space is freed. This may end up surprising a few users who didn't expect that implicit back-pressure from the VM.
+Интересная часть системных мониторов, для которой я не нашёл места нигде в книге, связана с работой планировщика с портами. Когда процесс отправляет в порт слишком много сообщений, и внутренняя его очередь переполняется, планировщики Erlang принудительно снимут отправителя с очереди планировщика и переключат в спящий режим до тех пор, пока место для отправки данных не освободится. Это может оказаться сюрпризом для некоторых пользователей, не ожидавших такого обратного давления со стороны виртуальной машины.
 
-This kind of event can be monitored by passing in the atom \term{busy\_port} to the system monitor. Specifically for clustered nodes, the atom \term{busy\_dist\_port} can be used to find when a local process gets de-scheduled when contacting a process on a remote node whose inter-node communication was handled by a busy port.
+%This kind of event can be monitored by passing in the atom \term{busy\_port} to the system monitor. Specifically for clustered nodes, the atom \term{busy\_dist\_port} can be used to find when a local process gets de-scheduled when contacting a process on a remote node whose inter-node communication was handled by a busy port.
+Такое событие можно обнаружить монитором, передавая ему атом \term{busy\_port}. Для узлов в составе кластера можно использовать атом \term{busy\_dist\_port}, это найдёт локальные процессы, которые были сняты с очереди планировщика и отправлены в спящий режим при попытке связаться с другим процессом на другом узле, чья связь между узлами оказалась заблокирована слишком занятым портом.
 
-If you find out you're having problems with these, try replacing your sending functions where in critical paths with \function{erlang:port\_command(Port, Data, [nosuspend])} for ports, and \function{erlang:send(Pid, Msg, [nosuspend])} for messages to distributed processes. They will then tell you when the message could not be sent and you would therefore have been descheduled.
+%If you find out you're having problems with these, try replacing your sending functions where in critical paths with \function{erlang:port\_command(Port, Data, [nosuspend])} for ports, and \function{erlang:send(Pid, Msg, [nosuspend])} for messages to distributed processes. They will then tell you when the message could not be sent and you would therefore have been descheduled.
+Если вы обнаружили, что у вас возникли проблемы, попробуйте заменить ваши функции отправки в критических фрагментах кода командой \functionT{erlang:port\_command(Порт, Данные, [nosuspend])} для портов и \functionT{erlang:send(Pid, Данные, [nosuspend])} для сообщений в направлении процессов на других узлах. Они дадут вам знать, когда не смогут отправить сообщение, и таким образом ваш процесс будет снят с очереди планировщика и заморожен.
 
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item What are the two main approaches to pin issues about CPU usages?
-	\item Name some of the profiling tools available. What approaches are preferable for production use? Why?
-	\item Why can long scheduling monitors be useful to find CPU or scheduler over-consumption?
-
+%	\item What are the two main approaches to pin issues about CPU usages?
+	\item Какие есть два основных подхода к поиску проблем с расходом процессора?
+%	\item Name some of the profiling tools available. What approaches are preferable for production use? Why?
+	\item Назовите некоторые известные вам инструменты для профилирования. Какие подходы предпочтительнее использовать на производстве (\emph{production})? Почему?
+%	\item Why can long scheduling monitors be useful to find CPU or scheduler over-consumption?
+	\item Почему мониторы, срабатывающие на долгую работу планировщика, могут пригодиться к поиску перерасхода процессора или планировщиков?
 \end{enumerate}
 
-\subsection*{Open-ended Questions}
+\subsection*{\OpenEndedTitle{}}
 
 \begin{enumerate}
-	\item If you find that a process doing very little work with reductions ends up being scheduled for long periods of time, what can you guess about it or the code it runs?
-	\item Can you set up a system monitor and then trigger it with regular Erlang code? Can you use it to find out for how long processes seem to be scheduled on average? You may need to manually start random processes from the shell that are more aggressive in their work than those provided by the existing system.
+%	\item If you find that a process doing very little work with reductions ends up being scheduled for long periods of time, what can you guess about it or the code it runs?
+	\item Если вы обнаружите, что процесс выполняет очень мало работы согласно счётчику редукций, и планировщик выделяет ему длительные периоды времени, какие можно сделать выводы о коде, который там исполняется?
+%	\item Can you set up a system monitor and then trigger it with regular Erlang code? Can you use it to find out for how long processes seem to be scheduled on average? You may need to manually start random processes from the shell that are more aggressive in their work than those provided by the existing system.
+	\item Можно ли запустить системный монитор и заставить его сработать обычным кодом на Erlang? Можно ли с его помощью найти средний интервал, выдаваемый процессам планировщиком? Вам может быть понадобится запускать вручную из интерпретатора случайные процессы, которые будут выполнять некоторую работу более агрессивно чем те, что имеются в системе сейчас.
 \end{enumerate}
 
 %%%
@@ -3122,7 +3177,8 @@ If you find out you're having problems with these, try replacing your sending fu
 %%%
 %%%
 
-\chapter{Tracing}
+%\chapter{Tracing}
+\chapter{Трассировка}
 \label{chap:tracing}
 
 One of the lesser known and absolutely under-used features of Erlang and the BEAM virtual machine is just about how much tracing you can do on there.
