@@ -76,82 +76,111 @@
 %The most basic form is \expression{\{Mod, Fun, Arity\}}, where \var{Mod} is a literal module, \var{Fun} is a function name, and \var{Arity} is the number of arguments of the function to trace. Any of these may also be replaced by wildcards (\expression{'\_'}). Recon will forbid forms that match too widely on everything (such as \expression{\{'\_','\_','\_'\}}), as they could be plain dangerous to run in production.
 Основная базовая форма записи --- выражение \expression{\{Модуль, Функция, Арность\}}, где \var{Модуль} --- это имя модуля, \var{Функция} --- имя функции и \var{Арность} --- число аргументов для точного выбора функции, которую мы собрались трассировать. Любой из этих параметров можно заменить подстановочным символом (\expression{'\_'}). Recon запрещает формы, которые слишком широко совпадут с большим количеством функций, например \expression{\{'\_','\_','\_'\}}), поскольку будет очень опасно запускать такую трассировку на производстве.
 
-A fancier form will be to replace the arity by a function to match on lists of arguments. The function is limited to those usable by match specifications similar to what is available in ETS\footnote{\href{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}}. Finally, multiple patterns can be put into a list to broaden the matching scope.
+%A fancier form will be to replace the arity by a function to match on lists of arguments. The function is limited to those usable by match specifications similar to what is available in ETS\footnote{\href{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}}. Finally, multiple patterns can be put into a list to broaden the matching scope.
+Более сложная форма записи позволяет заменить параметр арности функцией, которая будет сопоставлять списки аргументов с образцами. Функция ограничена спецификациями, подобными тем, что доступны в ETS\footnote{\href{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}}. И наконец множество образцов можно поместить в список и расширить таким образом поиск.
 
-It will also be possible to rate limit based on two manners: a static count, or a number of matches per time interval.
+%It will also be possible to rate limit based on two manners: a static count, or a number of matches per time interval.
+Также имеется возможность ограничить скорость подачи событий двумя способами: ограничением количества или числа совпадений в интервал времени.
 
-Rather than going more in details, here's a list of examples and how to trace for them.
+%Rather than going more in details, here's a list of examples and how to trace for them.
+Вместо того, чтобы углубляться в скучные детали, ниже показан ряд примеров и как для них выполнить трассировку.
 
-\begin{VerbatimErl}
 %% All calls from the queue module, with 10 calls printed at most:
-recon_trace:calls({queue, '_', '_'}, 10)
-
 %% All calls to lists:seq(A,B), with 100 calls printed at most:
-recon_trace:calls({lists, seq, 2}, 100)
-
 %% All calls to lists:seq(A,B), with 100 calls per second at most:
-recon_trace:calls({lists, seq, 2}, {100, 1000})
-
 %% All calls to lists:seq(A,B,2) (all sequences increasing by two) with 100 calls
 %% at most:
-recon_trace:calls({lists, seq, fun([_,_,2]) -> ok end}, 100)
-
 %% All calls to iolist_to_binary/1 made with a binary as an argument already
 %% (a kind of tracking for useless conversions):
+%% Calls to the queue module only in a given process Pid, at a rate of 50 per
+%% second at most:
+%% Print the traces with the function arity instead of literal arguments:
+%% Matching the filter/2 functions of both dict and lists modules, across new
+%% processes only:
+%% Tracing the handle_call/3 functions of a given module for all new processes,
+%% and those of an existing one registered with gproc:
+%% Show the result of a given function call, the important bit being the
+%% return_trace() call or the {return_trace} match spec value.
+
+\begin{VerbatimErl}
+%% Все вызовы в модуле 'queue', печатаем не более 10 первых вызовов:
+recon_trace:calls({queue, '_', '_'}, 10)
+
+%% Все вызовы к lists:seq(A,B) и печатаем не более 100 вызовов:
+recon_trace:calls({lists, seq, 2}, 100)
+
+%% Все вызовы к lists:seq(A,B) и печатаем не более 100 вызовов в секунду:
+recon_trace:calls({lists, seq, 2}, {100, 1000})
+
+%% Все вызовы к lists:seq(A,B,2) (последовательности с шагом два) и не больше 
+%% 100 вызовов в сумме:
+recon_trace:calls({lists, seq, fun([_,_,2]) -> ok end}, 100)
+
+%% Все вызовы iolist_to_binary/1 выполненные когда аргумент уже является 
+%% двоичными данными (отслеживаем бесполезные приведения типов):
 recon_trace:calls({erlang, iolist_to_binary,
                    fun([X]) when is_binary(X) -> ok end},
                   10)
 
-%% Calls to the queue module only in a given process Pid, at a rate of 50 per
-%% second at most:
+%% Вызовы к модулю 'queue' только в заданном процессе Pid, со скоростью не чаще
+%% 50 в секунду:
 recon_trace:calls({queue, '_', '_'}, {50,1000}, [{pid, Pid}])
 
-%% Print the traces with the function arity instead of literal arguments:
+%% Печатать сообщения трассировки с указанием арности, вместо значений аргументов:
 recon_trace:calls(TSpec, Max, [{args, arity}])
 
-%% Matching the filter/2 functions of both dict and lists modules, across new
-%% processes only:
+%% Совпадёт с функциями filter/2 в модулях dict и lists, только среди новых процессов:
 recon_trace:calls([{dict,filter,2},{lists,filter,2}], 10, [{pid, new}])
 
-%% Tracing the handle_call/3 functions of a given module for all new processes,
-%% and those of an existing one registered with gproc:
+%% Трассируем функции handle_call/3 заданного модуля для новых процессов, и тех 
+%% существующих, которые были зарегистрированы в gproc:
 recon_trace:calls({Mod,handle_call,3}, {1,100}, [{pid, [{via, gproc, Name}, new]}
 
-%% Show the result of a given function call, the important bit being the
-%% return_trace() call or the {return_trace} match spec value.
+%% Показать результат данного вызова функции, важным моментом является вызов
+%% return_trace() или значение {return_trace} в спецификации сопоставления.
 recon_trace:calls({Mod,Fun,fun(_) -> return_trace() end}, Max, Opts)
 recon_trace:calls({Mod,Fun,[{'_', [], [{return_trace}]}]}, Max, Opts)
 
 \end{VerbatimErl}
 
-Each call made will override the previous one, and all calls can be cancelled with \function{recon\_trace:clear/0}.
+%Each call made will override the previous one, and all calls can be cancelled with \function{recon\_trace:clear/0}.
+Каждый выполненный вызов отменит действие предыдущего, и все вызовы можно отменить с помощью \function{recon\_trace:clear/0}.
 
-There's a few more combination possible, with more options:
+%There's a few more combination possible, with more options:
+Возможно ещё несколько комбинаций, с дополнительными опциями:
 
 \begin{description}
-	\item[\expression{\{pid, PidSpec\}}] \hfill
+%	\item[\expression{\{pid, PidSpec\}}] \hfill
+\item[\expression{\{pid, СпецификацияPid\}}] \hfill
 	
-		Which processes to trace. Valid options is any of \term{all}, \term{new}, \term{existing}, or a process descriptor (\expression{\{A,B,C\}}, \expression{"<A.B.C>"}, an atom representing a name, \expression{\{global, Name\}}, \expression{\{via, Registrar, Name\}}, or a pid). It's also possible to specify more than one by putting them in a list.
+%		Which processes to trace. Valid options is any of \term{all}, \term{new}, \term{existing}, or a process descriptor (\expression{\{A,B,C\}}, \expression{"<A.B.C>"}, an atom representing a name, \expression{\{global, Name\}}, \expression{\{via, Registrar, Name\}}, or a pid). It's also possible to specify more than one by putting them in a list.
+		Какие процессы трассировать. Допустимыми опциями является комбинация любых значений из такого набора: \term{all}, \term{new}, \term{existing}, или дескриптор процесса (\expression{\{A,B,C\}}, \expression{"<A.B.C>"}, атом, представляющий имя, \expression{\{global, Имя\}}, \expression{\{via, Программа-Регистратор, Имя\}}, или просто pid). Также возможно указать больше одного варианта, поместив их в список.
 		
 	\item[\expression{\{timestamp, formatter | trace\}}] \hfill
 	
-		By default, the formatter process adds timestamps to messages received. If accurate timestamps are required, it's possible to force the usage of timestamps within trace messages by adding the option \expression{\{timestamp, trace\}}.
+%		By default, the formatter process adds timestamps to messages received. If accurate timestamps are required, it's possible to force the usage of timestamps within trace messages by adding the option \expression{\{timestamp, trace\}}.
+		По умолчанию функция печати добавляет текущее время к полученным сообщениям. Если требуется более точное время, можно принудительно включить добавление времени внутри сообщений трассировки, добавив опцию \expression{\{timestamp, trace\}}.
 		
 	\item[\expression{\{args, arity | args\}}] \hfill
 	
-		Whether to print the arity in function calls or their (by default) literal representation.
+%		Whether to print the arity in function calls or their (by default) literal representation.
+		Указывает что печатать в вызовах функций: арность функции (вывод получается более коротким) или их буквальные значения (по умолчанию включено, более длинный вывод).
 		
  	\item[\expression{\{scope, global | local\}}] \hfill
 	
-		By default, only 'global' (fully qualified function calls) are traced, not calls made internally. To force tracing of local calls, pass in \expression{\{scope, local\}}. This is useful whenever you want to track the changes of code in a process that isn't called with \expression{Module:Fun(Args)}, but just \expression{Fun(Args)}.
+%		By default, only 'global' (fully qualified function calls) are traced, not calls made internally. To force tracing of local calls, pass in \expression{\{scope, local\}}. This is useful whenever you want to track the changes of code in a process that isn't called with \expression{Module:Fun(Args)}, but just \expression{Fun(Args)}.
+		По уолчанию трассируются только глобальные (полностью заданные вызовы функций с именем модуля). Для трассировки локальных вызовов, передайте сюда выражение \expression{\{scope, local\}}. Это полезно, когда вы отслеживаете изменения в коде в том процессе, который не был вызван полной формой (\expression{Module:Fun(Args)}), а вместо этого был использован короткий вызов \expression{Fun(Args)}.
 \end{description}
 
-With these options, the multiple ways to pattern match on specific calls for specific functions and whatnot, a lot of development and production issues can more quickly be diagnosed. If the idea ever comes to say "hm, maybe I should add more logging there to see what could cause that funny behaviour", tracing can usually be a very fast shortcut to get the data you need without deploying any code or altering its readability.
+%With these options, the multiple ways to pattern match on specific calls for specific functions and whatnot, a lot of development and production issues can more quickly be diagnosed. If the idea ever comes to say "hm, maybe I should add more logging there to see what could cause that funny behaviour", tracing can usually be a very fast shortcut to get the data you need without deploying any code or altering its readability.
+С этими опциями имеется много способов сопоставить с образцом вызовы некоторых функций и всё такое, и можно диагностировать множество проблем на производстве гораздо быстрее. Если вы когда-нибудь задумываетесь <<Хм, наверное надо вставить здесь io:format и посмотреть, почему этот код ведёт себя странно>>, то трассировка обычно является коротким путём к получению нужных вам данных без добавления нового кода или изменения его читаемости.
 
 
-\section{Example Sessions}
+%\section{Example Sessions}
+\section{Примеры}
 
-First let's trace the queue:new functions in any process:
+%First let's trace the queue:new functions in any process:
+Давайте попробуем трассировку функций queue:new во всех процессах:
 
 \begin{VerbatimEshell}
 1> recon_trace:calls({queue, new, '_'}, 1).
@@ -160,9 +189,11 @@ First let's trace the queue:new functions in any process:
 Recon tracer rate limit tripped.
 \end{VerbatimEshell}
 
-The limit was set to 1 trace message at most, and recon let us know when that limit was reached.
+%The limit was set to 1 trace message at most, and recon let us know when that limit was reached.
+Ограничение было установлено в 1 сообщение, и recon дал нам знать, когда лимит был достигнут.
 
-Let's instead look for all the \function{queue:in/2} calls, to see what it is we're inserting in queues:
+%Let's instead look for all the \function{queue:in/2} calls, to see what it is we're inserting in queues:
+Давайте вместо этого посмотрим на все вызовы \function{queue:in/2}, чтобы проверить что там вставляется в очереди:
 
 \begin{VerbatimEshell}
 2> recon_trace:calls({queue, in, 2}, 1).
@@ -171,7 +202,8 @@ Let's instead look for all the \function{queue:in/2} calls, to see what it is we
 Recon tracer rate limit tripped.
 \end{VerbatimEshell}
 
-In order to see the content we want, we should change the trace patterns to use a fun that matches on all arguments in a list (\term{\_}) and returns \expression{return\_trace()}. This last part will generate a second trace for each call that includes the return value:
+%In order to see the content we want, we should change the trace patterns to use a fun that matches on all arguments in a list (\term{\_}) and returns \expression{return\_trace()}. This last part will generate a second trace for each call that includes the return value:
+Чтобы увидеть те данные, которые нам интересны, следует изменить образцы трассировки и использовать анонимную функцию, которая будет сопоставляться со всеми аргументами в списке (\term{\_}) и возвратит \expression{return\_trace()}. Последняя часть создаст второе сообщение для каждого события трассировки, в котором будет возвращаемое значение:
 
 \begin{VerbatimEshell}
 3> recon_trace:calls({queue, in, fun(_) -> return_trace() end}, 3).
@@ -185,7 +217,8 @@ In order to see the content we want, we should change the trace patterns to use 
 Recon tracer rate limit tripped.
 \end{VerbatimEshell}
 
-Matching on argument lists can be done in a more complex manner:
+%Matching on argument lists can be done in a more complex manner:
+Сопоставление со списком аргументов можно сделать более сложным:
 
 \begin{VerbatimEshell}
 4> recon_trace:calls(
@@ -209,40 +242,54 @@ Matching on argument lists can be done in a more complex manner:
 ok
 \end{VerbatimEshell}
 
-Note that in the pattern above, no specific function (\expression{'\_'}) was matched against. Instead, the fun used restricted functions to those having two arguments, the first of which is either a list or an integer greater than 1.
+%Note that in the pattern above, no specific function (\expression{'\_'}) was matched against. Instead, the fun used restricted functions to those having two arguments, the first of which is either a list or an integer greater than 1.
+Заметьте, что в шаблоне, показанном выше, событие не сопоставляется ни с какой конкретной функцией. Вместо этого используются охранные значения, фильтрующие функции с двумя аргументами, первый из которых является списком или целым числом больше единицы.
 
-Be aware that extremely broad patterns with lax rate-limitting (or very high absolute limits) may impact your node's stability in ways \module{recon\_trace} cannot easily help you with. Similarly, tracing extremely large amounts of function calls (all of them, or all of \module{io} for example) can be risky if more trace messages are generated than any process on the node could ever handle, despite the precautions taken by the library.
+%Be aware that extremely broad patterns with lax rate-limitting (or very high absolute limits) may impact your node's stability in ways \module{recon\_trace} cannot easily help you with. Similarly, tracing extremely large amounts of function calls (all of them, or all of \module{io} for example) can be risky if more trace messages are generated than any process on the node could ever handle, despite the precautions taken by the library.
+Будьте осторожны, слишком широкие шаблоны со слишком свободными ограничениями скорости (или большими абсолютными лимитами) могут повлиять на стабильность вашего узла так сильно, что даже \module{recon\_trace} не очень-то поможет. Подобно этому, трассирование очень большого количества вызовов функций (всех подряд, или, например всех из модуля \module{io}) может оказаться рискованным делом, когда будет создаваться больше сообщений, чем сможет обработать ваш узел. Даже несмотря на меры предосторожности, принятые в библиотеке.
 
-In doubt, start with the most restrictive tracing possible, with low limits, and progressively increase your scope.
+%In doubt, start with the most restrictive tracing possible, with low limits, and progressively increase your scope.
+Если не уверены, начните с самых ограниченных правил трассировки с пониженными лимитами и постепенно расширяйте лимиты и поиск.
 
 
-\section{Exercises}
+\section{Упражнения}
 
-\subsection*{Review Questions}
+\subsection*{\ReviewTitle{}}
 
 \begin{enumerate}
-	\item Why is debugger use generally limited on Erlang?
-	\item What are the options you can use to trace OTP processes?
-	\item What determines whether a given set of functions or processes get traced?
-	\item How can you stop tracing with \module{recon\_trace}? With other tools?
-	\item How can you trace non-exported function calls?
+%	\item Why is debugger use generally limited on Erlang?
+	\item Почему полезность отладчика в Erlang ограничена?
+%	\item What are the options you can use to trace OTP processes?
+	\item Какие возможности у вас имеются для трассировки процессов ОТР?
+%	\item What determines whether a given set of functions or processes get traced?
+	\item Какие правила определяют, будет ли трассироваться некий данный набор функций или процессов?
+%	\item How can you stop tracing with \module{recon\_trace}? With other tools?
+	\item Как можно прекратить трассировку с помощью \module{recon\_trace}? А с помощью других инструментов?
+%	\item How can you trace non-exported function calls?
+	\item Как можно выполнить трассировку вызовов функций, которые не были экспортированы?
 \end{enumerate}
 
-\subsection*{Open-ended Questions}
+\subsection*{\OpenEndedTitle{}}
 
 \begin{enumerate}
-	\item When would you want to move time stamping of traces to the VM's trace mechanisms directly? What would be a possible downside of doing this?	
-	\item Imagine that traffic sent out of a node does so over SSL, over a multi-tenant system. However, due to wanting to validate data sent (following a customer complain), you need to be able to inspect what was seen clear text. Can you think up a plan to be able to snoop in the data sent to their end through the \module{ssl} socket, without snooping on the data sent to any other customer?
+%	\item When would you want to move time stamping of traces to the VM's trace mechanisms directly? What would be a possible downside of doing this?	
+	\item Когда вы можете захотеть перенести установку отметок о времени внутрь механизмов трассировки виртуальной машины? Какой возможный недостаток здесь кроется?
+%	\item Imagine that traffic sent out of a node does so over SSL, over a multi-tenant system. However, due to wanting to validate data sent (following a customer complain), you need to be able to inspect what was seen clear text. Can you think up a plan to be able to snoop in the data sent to their end through the \module{ssl} socket, without snooping on the data sent to any other customer?
+	\item Представьте, что некие данные, идущие с узла, проходят внутри шифрования SSL через сложную систему с рядом узлов. Однако, поскольку вы желаете проверять отправленные данные (реагируете на жалобу одного из клиентов), вам нужна возможность изучить данные без шифрования в чистом виде. Можете ли вы придумать план, как заглянуть в отправленные данные через сокет модуля \module{ssl}, не подслушивая данные, отправленные любому другому клиенту кроме того, что пожаловался?
 \end{enumerate}
 
-\subsection*{Hands-On}
+\subsection*{\HandsOnTitle{}}
 
-Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo} (these may require a decent understanding of the code there):
+%Using the code at \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo} (these may require a decent understanding of the code there):
+Используя код, находящийся по адресу \href{https://github.com/ferd/recon\_demo}{https://github.com/ferd/recon\_demo} (вам может потребоваться хорошо разобраться с этим кодом):
 
 \begin{enumerate}
-	\item Can chatty processes (\module{council\_member}) message themselves? (\emph{hint: can this work with registered names? Do you need to check the chattiest process and see if it messages itself?})
-	\item Can you estimate the overall frequency at which messages are sent globally?
-	\item Can you crash a node using any of the tracing tools? (\emph{hint: dbg makes it easier due to its greater flexibility})
+%	\item Can chatty processes (\module{council\_member}) message themselves? (\emph{hint: can this work with registered names? Do you need to check the chattiest process and see if it messages itself?})
+	\item Могут ли разговорчивые процессы (\module{council\_member}) писать самим себе? (\emph{подсказка: может ли это сработать с зарегистрированными именами? Нужно ли вам найти самый болтливый процесс и проверить не пишет ли он сам себе?})
+%	\item Can you estimate the overall frequency at which messages are sent globally?
+	\item Сможете ли вы глобально оценить общую частоту, с которой посылаются сообщения?
+%	\item Can you crash a node using any of the tracing tools? (\emph{hint: dbg makes it easier due to its greater flexibility})
+	\item Сможете ли вы аварийно завершить работу узла используя трассировочные инструменты (\emph{подсказка: это легче сделать с помощью dbg благодаря большой гибкости и отсутствию тормозов.})
 \end{enumerate}
 
 
