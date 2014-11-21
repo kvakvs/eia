@@ -2,56 +2,79 @@
 \chapter{Трассировка}
 \label{chap:tracing}
 
-One of the lesser known and absolutely under-used features of Erlang and the BEAM virtual machine is just about how much tracing you can do on there.
+%One of the lesser known and absolutely under-used features of Erlang and the BEAM virtual machine is just about how much tracing you can do on there.
+Одна из менее известных и совершенно недостатчно популярных возможностей Erlang и виртуальной машины BEAM --- это то, сколько видов трассировки можно в ней выполнить.
 
-Forget your debuggers, their use is too limited.\footnote{One common issue with debuggers that let you insert break points and step through a program is that they are incompatible with many Erlang programs: put a break point in one process and the ones around keep going. In practice, this turns debugging into a very limited activity because as soon as a process needs to interact with the one you're debugging, its calls start timing out and crashing, possibly taking down the entire node with it. Tracing, on the other hand, doesn't interfere with program execution, but still gives you all the data you need.} Tracing makes sense in Erlang at all steps of your system's life cycle, whether it's for development or for diagnosing a running production system. 
+%Forget your debuggers, their use is too limited.\footnote{One common issue with debuggers that let you insert break points and step through a program is that they are incompatible with many Erlang programs: put a break point in one process and the ones around keep going. In practice, this turns debugging into a very limited activity because as soon as a process needs to interact with the one you're debugging, its calls start timing out and crashing, possibly taking down the entire node with it. Tracing, on the other hand, doesn't interfere with program execution, but still gives you all the data you need.} Tracing makes sense in Erlang at all steps of your system's life cycle, whether it's for development or for diagnosing a running production system. 
+Забудьте о ваших отладчиках, они слишком ограничены\footnote{Одна из общих проблем отладчиков это то, что возможность установки точек останова и выполнять шаги в программе несовместима со многими программами на Erlang: останови один процесс, а остальные продолжат работу. На практике это превращает отладку в очень ограниченную задачу, поскольку если процесс начинает взаимодействовать с другими во время отладки, начинают также срабатывать таймауты и процессы падают, вероятно лечь может и весь узел целиком. С другой стороны трассировка не вмешивается в работу программы, но даёт вам нужные данные.}. Выполнение трассировки в Erlang имеет смысл на всех этапах жизни вашей системы, независимо от того, является ли эта система вашей тестовой, или работающей производственной системой.
 
-There are a few options available to trace Erlang programs:
+%There are a few options available to trace Erlang programs:
+Для трассировки Erlang-программ имеется несколько подходов:
 
 \begin{itemize}
-	\item \module{sys}\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} comes standard with OTP and allows the user to set custom tracing functions, log all kinds of events, and so on. It's generally complete and fine to use for development. It suffers a bit in production because it doesn't redirect IO to remote shells, and doesn't have rate-limiting capabilities for trace messages. It is still recommended to read the documentation for the module.
+%	\item \module{sys}\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} comes standard with OTP and allows the user to set custom tracing functions, log all kinds of events, and so on. It's generally complete and fine to use for development. It suffers a bit in production because it doesn't redirect IO to remote shells, and doesn't have rate-limiting capabilities for trace messages. It is still recommended to read the documentation for the module.
+	\item Модуль \module{sys}\footnote{\href{http://www.erlang.org/doc/man/sys.html}{http://www.erlang.org/doc/man/sys.html}} идёт в стандартной поставке OTP и позволяет пользователю установить собственные функции для приёма событий трассировки, журналировать все события и так далее. Он в целом является полнофункциональным и подходит для разработки. Не совсем удачным является его использование на производственной системе, поскольку он не перенаправляет вывод на удалённые терминалы и не ограничивает скорость отправки сообщений трассировки. Если вы даже не будете его использовать, обязательно ознакомьтесь с документацией по этому модулю.
 	
-	\item \otpapp{dbg}\footnote{\href{http://www.erlang.org/doc/man/dbg.html}{http://www.erlang.org/doc/man/dbg.html}} also comes standard with Erlang/OTP. Its interface is a bit clunky in terms of usability, but it's entirely good enough to do what you need. The problem with it is that you \emph{have to know what you're doing}, because \otpapp{dbg} can log absolutely everything on the node and kill one in under two seconds.
+%	\item \otpapp{dbg}\footnote{\href{http://www.erlang.org/doc/man/dbg.html}{http://www.erlang.org/doc/man/dbg.html}} also comes standard with Erlang/OTP. Its interface is a bit clunky in terms of usability, but it's entirely good enough to do what you need. The problem with it is that you \emph{have to know what you're doing}, because \otpapp{dbg} can log absolutely everything on the node and kill one in under two seconds.
+	\item Модуль \otpapp{dbg}\footnote{\href{http://www.erlang.org/doc/man/dbg.html}{http://www.erlang.org/doc/man/dbg.html}} также входит в поставку Erlang/ОТР. Его интерфейс немного неуклюж в плане удобства использования, но он совершенно подходит для ваших задач. Проблема с ним в том, что вы \emph{должны знать, что вы делаете}, поскольку \otpapp{dbg} может журналировать абсолютно всё на узле и убить этой нагрузкой узел за пару секунд.
 	
-	\item \emph{tracing BIFs} are available as part of the \module{erlang} module. They're mostly the raw blocks used by all the applications mentioned in this list, but their lower level of abstraction makes them rather difficult to use.
+%	\item \emph{tracing BIFs} are available as part of the \module{erlang} module. They're mostly the raw blocks used by all the applications mentioned in this list, but their lower level of abstraction makes them rather difficult to use.
+	\item \emph{Трассирующие встроенные BIF-функции} доступны в составе модуля \module{erlang}. Они в основном являются кирпичиками, из которых построены все приложения в этом списке, но их более низкий уровень абстракции делает их довольно трудными в использовании.
 	
-	\item \otpapp{redbug}\footnote{\href{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}} is a production-safe tracing library, part of the \otpapp{eper}\footnote{\href{https://github.com/massemanet/eper}{https://github.com/massemanet/eper}} suite. It has an internal rate-limiter, and a nice usable interface. To use it, you must however be willing to add in all of \otpapp{eper}'s dependencies. The toolkit is fairly comprehensive and can be a very interesting install.
+%	\item \otpapp{redbug}\footnote{\href{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}} is a production-safe tracing library, part of the \otpapp{eper}\footnote{\href{https://github.com/massemanet/eper}{https://github.com/massemanet/eper}} suite. It has an internal rate-limiter, and a nice usable interface. To use it, you must however be willing to add in all of \otpapp{eper}'s dependencies. The toolkit is fairly comprehensive and can be a very interesting install.
+	\item Библиотека \otpapp{redbug}\footnote{\href{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}{https://github.com/massemanet/eper/blob/master/doc/redbug.txt}} --- разработана с учётом безопасности использования на производственных серверах, входит в состав набора инструментов \otpapp{eper}\footnote{\href{https://github.com/massemanet/eper}{https://github.com/massemanet/eper}}. Имеет встроенный ограничитель скорости подачи событий, и хороший удобный интерфейс. Для использования её, однако, вам придётся добавить её в список зависимостей вашего проекта. Набор инструментов в ней, кроме redbug, довольно обширен и может оказаться полезным.
 	
-	\item \module{recon\_trace}\footnote{\href{http://ferd.github.io/recon/recon\_trace.html}{http://ferd.github.io/recon/recon\_trace.html}} is \otpapp{recon}'s take on tracing. The objective was to allow the same levels of safety as with \otpapp{redbug}, but without the dependencies. The interface is different, and the rate-limiting options aren't entirely identical. It can also only trace function calls, and not messages.\footnote{Messages may be supported in future iterations of the library. In practice, the author hasn't found the need when using OTP, given behaviours and matching on specific arguments allows the user to get something roughly equivalent.}
+%	\item \module{recon\_trace}\footnote{\href{http://ferd.github.io/recon/recon\_trace.html}{http://ferd.github.io/recon/recon\_trace.html}} is \otpapp{recon}'s take on tracing. The objective was to allow the same levels of safety as with \otpapp{redbug}, but without the dependencies. The interface is different, and the rate-limiting options aren't entirely identical. It can also only trace function calls, and not messages.\footnote{Messages may be supported in future iterations of the library. In practice, the author hasn't found the need when using OTP, given behaviours and matching on specific arguments allows the user to get something roughly equivalent.}
+	\item \module{recon\_trace}\footnote{\href{http://ferd.github.io/recon/recon\_trace.html}{http://ferd.github.io/recon/recon\_trace.html}} --- это попытка \otpapp{recon} подойти к проблеме трассирования. Целью создания его была возможность предложить те же уровни безопасности, что и \otpapp{redbug}, но не добавляя зависимостей. Интерфейс отличается, и возможности ограничения скорости подачи сообщения не совсем идентичны. Он также может трассировать только вызовы функций, но не сообщения\footnote{Сообщения могут поддерживаться в будущих версиях библиотеки. На практике автор не нашёл потребности в этом, поскольку при использовании ОТР, поведений и сопоставления с аргументами, можно получить примерно тот же эффект.}
 \end{itemize}
 
-This chapter will focus on tracing with \module{recon\_trace}, but the terminology and the concepts used mostly carry over to any other Erlang tracing tool that can be used.
+%This chapter will focus on tracing with \module{recon\_trace}, but the terminology and the concepts used mostly carry over to any other Erlang tracing tool that can be used.
+Эта глава сосредоточится на трассировке с помощью \module{recon\_trace}, но терминология и концепция в целом переносятся и на другие инструменты трассировки, которые вы решите использовать.
 
-\section{Tracing Principles}
+
+%\section{Tracing Principles}
+\section{Принципы трассировки}
 \label{sec:tracing-princples}
 
-The Erlang Trace BIFs allow to trace any Erlang code at all\footnote{In cases where processes contain sensitive information, data can be forced to be kept private by calling \expression{process\_flag(sensitive, true)}}. They work in two parts: \emph{pid specifications}, and \emph{trace patterns}.
+%The Erlang Trace BIFs allow to trace any Erlang code at all\footnote{In cases where processes contain sensitive information, data can be forced to be kept private by calling \expression{process\_flag(sensitive, true)}}. They work in two parts: \emph{pid specifications}, and \emph{trace patterns}.
+Встроенные (BIF) функции трассирования позволяют проследить работу совсем любого Erlang-кода\footnote{В тех случаях, когда процессы содержат секретную информацию, данные можно оставить скрытыми с помощью вызова \expressionT{process\_flag(sensitive, true)}}. Их работа состоит из двух частей: \emph{спецификации идентификаторов процессов (pid)}, и \emph{образцы трассировки}.
 
-Pid specifications lets the user decide which processes to target. They can be specific pids, \expression{all} pids, \expression{existing} pids, or \expression{new} pids (those not spawned at the time of the function call).
+%Pid specifications lets the user decide which processes to target. They can be specific pids, \expression{all} pids, \expression{existing} pids, or \expression{new} pids (those not spawned at the time of the function call).
+Спецификации pid позволяют пользователю решить, какой процесс его интересует. Они могут быть как конкретными значениями идентификаторов процессов, специальным атомом \expression{all} (все процессы), \expression{existing} (существующие процессы), или \expression{new} (новые, созданные во время вызова функции).
 
-The trace patterns represent functions. Functions can be specified in two parts: specifying the modules, functions, and arity, and then with Erlang match specifications\footnote{\href{http://www.erlang.org/doc/apps/erts/match\_spec.html}{http://www.erlang.org/doc/apps/erts/match\_spec.html}} to add constraints to arguments.
+%The trace patterns represent functions. Functions can be specified in two parts: specifying the modules, functions, and arity, and then with Erlang match specifications\footnote{\href{http://www.erlang.org/doc/apps/erts/match\_spec.html}{http://www.erlang.org/doc/apps/erts/match\_spec.html}} to add constraints to arguments.
+Образцы трассировки представляют собой функции. Функции можно указывать двумя частями: задавая модули, имена функций и арность, либо с помощью стандартных спецификаций сопоставления Erlang\footnote{\href{http://www.erlang.org/doc/apps/erts/match\_spec.html}{http://www.erlang.org/doc/apps/erts/match\_spec.html}}. Это позволяет добавить к аргументам условия и ограничения.
 
-What defines whether a specific function call gets traced or not is the intersection of both, as seen in Figure~\NamedRef{fig:tracing-venn}.
+%What defines whether a specific function call gets traced or not is the intersection of both, as seen in Figure~\NamedRef{fig:tracing-venn}.
+Решение, принадлежит ли некоторая функция к набору трассируемых, принимается по пересечению двух множеств, как видно на рисунке \ref{fig:tracing-venn}.
 
 \begin{figure}
   \includegraphics[max height=7cm]{tracing-venn.pdf}%
   \centering%
-  \caption{What gets traced is the result of the intersection between the matching pids and the matching trace patterns}%
+%  \caption{What gets traced is the result of the intersection between the matching pids and the matching trace patterns}%
+	\caption{Что будет трассироваться выбирается из пересечения множества совпадающих процессов и подходящих образцов трассировки (matching trace patterns)}
    \label{fig:tracing-venn}
 \end{figure}
 
-If either the pid specification excludes a process or a trace pattern excludes a given call, no trace will be received.
+%If either the pid specification excludes a process or a trace pattern excludes a given call, no trace will be received.
+Если хотя бы одна из спецификаций pid исключает некоторый процесс, либо шаблон трассировки исключает некоторый вызов, то события этой функции не будут получены.
 
-Tools like \otpapp{dbg} (and trace BIFs) force you to work with this Venn diagram in mind. You specify sets of matching pids and sets of trace patterns independently, and whatever happens to be at the intersection of both sets gets to be displayed.
+%Tools like \otpapp{dbg} (and trace BIFs) force you to work with this Venn diagram in mind. You specify sets of matching pids and sets of trace patterns independently, and whatever happens to be at the intersection of both sets gets to be displayed.
+Инструменты вроде \otpapp{dbg} (и встроенных трассировочных BIF-функций) заставляют вас помнить эту диаграмму при работе. Вы указываете наборы совпадающих идентификаторов процессов и наборы образцов трассировки независимо друг от друга, и то, что находится на пересечении обеих множеств --- вы получаете в качестве результата.
 
-Tools like \otpapp{redbug} and \module{recon\_trace}, on the other hand, abstract this away.
+%Tools like \otpapp{redbug} and \module{recon\_trace}, on the other hand, abstract this away.
+С другой стороны инструменты вроде \otpapp{redbug} и \module{recon\_trace} стараются скрыть это от пользователя.
 \FloatBarrier
 
-\section{Tracing with Recon}
 
-Recon, by default, will match all processes. This will often be good enough for a lot of debugging cases. The interesting part you'll want to play with most of the time is specification of trace patterns. Recon support a few basic ways to declare them. 
+%\section{Tracing with Recon}
+\section{Трассируем с помощью Recon}
 
-The most basic form is \expression{\{Mod, Fun, Arity\}}, where \var{Mod} is a literal module, \var{Fun} is a function name, and \var{Arity} is the number of arguments of the function to trace. Any of these may also be replaced by wildcards (\expression{'\_'}). Recon will forbid forms that match too widely on everything (such as \expression{\{'\_','\_','\_'\}}), as they could be plain dangerous to run in production.
+%Recon, by default, will match all processes. This will often be good enough for a lot of debugging cases. The interesting part you'll want to play with most of the time is specification of trace patterns. Recon support a few basic ways to declare them. 
+По умолчанию \otpapp{recon} будет смотреть за всеми процессами. Это часто является вполне приемлемым вариантом для множества случаев отладки. Чаще всего вас будет интересовать работа с образцами трассировки, и \otpapp{recon} поддерживает несколько способов их объявления.
+
+%The most basic form is \expression{\{Mod, Fun, Arity\}}, where \var{Mod} is a literal module, \var{Fun} is a function name, and \var{Arity} is the number of arguments of the function to trace. Any of these may also be replaced by wildcards (\expression{'\_'}). Recon will forbid forms that match too widely on everything (such as \expression{\{'\_','\_','\_'\}}), as they could be plain dangerous to run in production.
+Основная базовая форма записи --- выражение \expression{\{Модуль, Функция, Арность\}}, где \var{Модуль} --- это имя модуля, \var{Функция} --- имя функции и \var{Арность} --- число аргументов для точного выбора функции, которую мы собрались трассировать. Любой из этих параметров можно заменить подстановочным символом (\expression{'\_'}). Recon запрещает формы, которые слишком широко совпадут с большим количеством функций, например \expression{\{'\_','\_','\_'\}}), поскольку будет очень опасно запускать такую трассировку на производстве.
 
 A fancier form will be to replace the arity by a function to match on lists of arguments. The function is limited to those usable by match specifications similar to what is available in ETS\footnote{\href{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}{http://www.erlang.org/doc/man/ets.html\#fun2ms-1}}. Finally, multiple patterns can be put into a list to broaden the matching scope.
 
