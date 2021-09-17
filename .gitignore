@@ -2,8 +2,8 @@ Makefile
 README
 TODO
 patch.awk
-erlang/*
-graphics/*
+#erlang/*
+#graphics/*
 shell/*
 text/*
 text.*

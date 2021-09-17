@@ -3,6 +3,8 @@ Erlang in Anger (Russian)
 
 ## Building
 
-Requires: TexStudio, xetex (xelatex)
+Requires:
+- texstudio
+- texlive-xetex (xelatex)
 
 Missing: Assets from original EiA (Requested them from author)
